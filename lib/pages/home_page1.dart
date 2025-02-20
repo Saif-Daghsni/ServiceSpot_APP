@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:servicespot/components/bottom_nav_bar.dart';
 import 'package:servicespot/pages/favorite_page.dart';
@@ -12,6 +13,9 @@ class HomePage1 extends StatefulWidget {
 }
 
 class _HomePage1State extends State<HomePage1> {
+  
+  final user = FirebaseAuth.instance.currentUser!;
+  
   int _selectedIndex = 0;
 
   void navigateBottomBar(int index) {

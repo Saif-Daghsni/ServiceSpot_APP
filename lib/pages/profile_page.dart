@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -8,6 +9,7 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  final user = FirebaseAuth.instance.currentUser!;
   @override
   Widget build(BuildContext context) {
     return  Scaffold(
@@ -206,34 +208,43 @@ class _ProfilePageState extends State<ProfilePage> {
                   Navigator.pushNamed(context, '/loginPage');
                  },
 
-               child: Container(
-                  height: 55,
-                  width: double.infinity,
-                  padding: EdgeInsets.symmetric(horizontal: 20), // Padding inside the container
-                  decoration: BoxDecoration(
-                    color: Color.fromRGBO(211, 47, 47,1.0),
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween, // Aligns text & arrow
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.logout, color: Colors.white), // Icon before text
-                          SizedBox(width: 15), // Space between icon and text
-                          Text(
-                            "Logout ",
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.white,
+
+
+                //Logout
+               child: GestureDetector(
+                
+                onTap:(){
+                  FirebaseAuth.instance.signOut();
+                },
+                 child: Container(
+                    height: 55,
+                    width: double.infinity,
+                    padding: EdgeInsets.symmetric(horizontal: 20), // Padding inside the container
+                    decoration: BoxDecoration(
+                      color: Color.fromRGBO(211, 47, 47,1.0),
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween, // Aligns text & arrow
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.logout, color: Colors.white), // Icon before text
+                            SizedBox(width: 15), // Space between icon and text
+                            Text(
+                              "Logout ",
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.white,
+                              ),
                             ),
-                          ),
-                        ],
-                     ),
-                      Icon(Icons.chevron_right, color: Colors.white), // Small arrow on the right
-                    ],
-                  ), 
-                ),
+                          ],
+                       ),
+                        Icon(Icons.chevron_right, color: Colors.white), // Small arrow on the right
+                      ],
+                    ), 
+                  ),
+               ),
               ),
                 SizedBox(height: 10),
 
