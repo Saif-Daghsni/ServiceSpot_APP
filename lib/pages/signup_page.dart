@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class SignupPage extends StatefulWidget {
@@ -13,6 +14,23 @@ class _SignupPageState extends State<SignupPage> {
   TextEditingController passWord = TextEditingController();
   TextEditingController confirmPassword = TextEditingController();
   TextEditingController phoneNumber = TextEditingController();
+
+
+  Future signup() async{
+    try {
+        if(passWord.text.trim() == confirmPassword.text.trim()){
+        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: email.text.trim(), 
+          password: passWord.text.trim());
+          Navigator.pushNamed(context, '/auth');
+        }
+        else{
+          print("****confirmPassword error****");
+        }
+    } catch (e) {
+      print("***********Signup error ************");
+    }
+  }
 
   @override
   void dispose() {
@@ -56,124 +74,124 @@ class _SignupPageState extends State<SignupPage> {
                   topRight: Radius.circular(50),
                 ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.pushNamed(context, '/loginPage');
-                        },
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.arrow_back,
-                              color: Color.fromRGBO(2, 173, 103, 1.0),
-                            ),
-                            SizedBox(width: 5),
-                            Text(
-                              "Back to login",
-                              style: TextStyle(
-                                fontSize: 13,
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pushNamed(context, '/loginPage');
+                          },
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.arrow_back,
                                 color: Color.fromRGBO(2, 173, 103, 1.0),
                               ),
-                            ),
-                          ],
+                              SizedBox(width: 5),
+                              Text(
+                                "Back to login",
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Color.fromRGBO(2, 173, 103, 1.0),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 10),
-
-                  Text(
-                    "Sign Up",
-                    style: TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold,
-                      color: Color.fromRGBO(2, 173, 103, 1.0),
+                      ],
                     ),
-                  ),
-                  SizedBox(height: 20),
-
-                  // User Name Input Field
-                  _buildTextField(
-                    controller: userName,
-                    icon: Icons.person,
-                    hintText: "User Name",
-                  ),
-
-                  SizedBox(height: 20),
-
-                  // Email Input Field
-                  _buildTextField(
-                    controller: email,
-                    icon: Icons.mail,
-                    hintText: "Email",
-                  ),
-
-                  SizedBox(height: 20),
-
-                  // Password Input Field
-                  _buildTextField(
-                    controller: passWord,
-                    icon: Icons.lock,
-                    hintText: "Password",
-                    obscureText: true,
-                  ),
-
-                  SizedBox(height: 20),
-
-                  // Confirm Password Input Field
-                  _buildTextField(
-                    controller: confirmPassword,
-                    icon: Icons.lock,
-                    hintText: "Confirm Password",
-                    obscureText: true,
-                  ),
-
-                  SizedBox(height: 20),
-
-                  // Phone Number Input Field
-                  _buildTextField(
-                    controller: phoneNumber,
-                    icon: Icons.phone,
-                    hintText: "Phone Number",
-                  ),
-
-                  SizedBox(height: 20),
-
-                  _buildTextField(
-                    controller: phoneNumber,
-                    icon: Icons.location_on,
-                    hintText: "Lcalisation",
-                  ),
-
-                  SizedBox(height: 35),
-
-                  
-
-                  // Sign Up Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/homePage');
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color.fromRGBO(2, 173, 103, 1.0),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                      ),
-                      child: Text(
-                        "Sign Up",
-                        style: TextStyle(fontSize: 18, color: Colors.white),
+                    SizedBox(height: 10),
+                
+                    Text(
+                      "Sign Up",
+                      style: TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromRGBO(2, 173, 103, 1.0),
                       ),
                     ),
-                  ),
-                ],
+                    SizedBox(height: 20),
+                
+                    // User Name Input Field
+                    _buildTextField(
+                      controller: userName,
+                      icon: Icons.person,
+                      hintText: "User Name",
+                    ),
+                
+                    SizedBox(height: 20),
+                
+                    // Email Input Field
+                    _buildTextField(
+                      controller: email,
+                      icon: Icons.mail,
+                      hintText: "Email",
+                    ),
+                
+                    SizedBox(height: 20),
+                
+                    // Password Input Field
+                    _buildTextField(
+                      controller: passWord,
+                      icon: Icons.lock,
+                      hintText: "Password",
+                      obscureText: true,
+                    ),
+                
+                    SizedBox(height: 20),
+                
+                    // Confirm Password Input Field
+                    _buildTextField(
+                      controller: confirmPassword,
+                      icon: Icons.lock,
+                      hintText: "Confirm Password",
+                      obscureText: true,
+                    ),
+                
+                    SizedBox(height: 20),
+                
+                    // Phone Number Input Field
+                    _buildTextField(
+                      controller: phoneNumber,
+                      icon: Icons.phone,
+                      hintText: "Phone Number",
+                    ),
+                
+                    SizedBox(height: 20),
+                
+                    _buildTextField(
+                      controller: phoneNumber,
+                      icon: Icons.location_on,
+                      hintText: "Localisation",
+                    ),
+                
+                    SizedBox(height: 35),
+                
+                    
+                
+                    // Sign Up Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: signup,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color.fromRGBO(2, 173, 103, 1.0),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        child: Text(
+                          "Sign Up",
+                          style: TextStyle(fontSize: 18, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

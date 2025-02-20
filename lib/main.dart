@@ -1,3 +1,15 @@
+/*
+step1:
+el login te5em : ki tekteb el esem bel s7i7 tod5ol w kif tekteb bel 8alet ma tod5olech , w el logout fi el profil te5de
+w kif to5rej el bara w tarja3 kanak 3amel login tod5ol direct ll home 
+
+the step2 :
+wa9teli ya3mal sign up ttsajal el ma3loumat mta3a fi el fire base 
+
+*/ 
+
+
+
 // ignore_for_file: avoid_print
 
 import 'package:firebase_core/firebase_core.dart';
@@ -26,14 +38,13 @@ void main() async {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-  //el login te5em : ki tekteb el esem bel s/i/ tod5ol w kif tekteb bel 8alet ma tod5olech , w el logout fi el profil te5de
-  // w kif to5rej el bara w tarja3 kanak 3amel login tod5ol direct ll home 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: Auth(),
       routes: {
+        '/auth': (context) => Auth(),
         '/loginPage': (context) => LoginPage(),
         '/signupPage': (context) => SignupPage(),
         '/homePage': (context) => HomePage(),
