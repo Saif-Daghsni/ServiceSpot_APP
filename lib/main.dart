@@ -3,9 +3,12 @@ step1:
 el login te5em : ki tekteb el esem bel s7i7 tod5ol w kif tekteb bel 8alet ma tod5olech , w el logout fi el profil te5de
 w kif to5rej el bara w tarja3 kanak 3amel login tod5ol direct ll home 
 
-the step2 :
+step2 :
 wa9teli ya3mal sign up ttsajal el ma3loumat mta3a fi el fire base 
 
+
+step3:
+el button mta3 el Google te5dem bel s7i7
 */ 
 
 

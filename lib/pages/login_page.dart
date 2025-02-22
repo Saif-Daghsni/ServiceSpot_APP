@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -200,22 +201,26 @@ class _LoginPageState extends State<LoginPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         // Google Button
-                        Container(
-                          width: 70,
-                          height: 70,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(15),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 10,
-                              )
-                            ],
-                          ),
-                          child: Padding(
-                            padding: EdgeInsets.all(10),
-                            child: Image.asset("assets/Google.png"),
+                        GestureDetector(
+                          //onTap: signInwithGoogle(),
+                          onTap:()=> signInwithGoogle(),
+                          child: Container(
+                            width: 70,
+                            height: 70,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(15),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 10,
+                                )
+                              ],
+                            ),
+                            child: Padding(
+                              padding: EdgeInsets.all(10),
+                              child: Image.asset("assets/Google.png"),
+                            ),
                           ),
                         ),
                 
@@ -273,4 +278,24 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   }
+}
+
+signInwithGoogle() async {
+  final GoogleSignIn googleSignIn = GoogleSignIn();
+
+  // Sign out first to ensure the account chooser is displayed
+  await googleSignIn.signOut();
+
+  final GoogleSignInAccount? gUser = await googleSignIn.signIn();
+
+  if (gUser == null) return;
+
+  final GoogleSignInAuthentication gAuth = await gUser.authentication;
+
+  final credential = GoogleAuthProvider.credential(
+    accessToken: gAuth.accessToken,
+    idToken: gAuth.idToken,
+  );
+
+  return await FirebaseAuth.instance.signInWithCredential(credential);
 }
