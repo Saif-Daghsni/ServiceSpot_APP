@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:servicespot/pages/home_page1.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -9,17 +10,51 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
+bool isEmailEmpty = false;
+bool isPasswordEmpty = false;
+
 class _LoginPageState extends State<LoginPage> {
+  GlobalKey<FormState> formstate = GlobalKey();
+
   TextEditingController myEmail = TextEditingController();
   TextEditingController myPassWord = TextEditingController();
 
-  Future login() async{
-    await FirebaseAuth.instance.signInWithEmailAndPassword(
-      email: myEmail.text.trim(), 
-      password: myPassWord.text.trim()
-      );
-  }
+  String errorMessageP = '';
+  String errorMessageE = '';
+  String errorMessageV = '';
 
+  void login() async {
+    if (formstate.currentState!.validate()) {
+      try {
+        // Try signing in with email and password
+        UserCredential userCredential = await FirebaseAuth.instance
+            .signInWithEmailAndPassword(
+              email: myEmail.text.trim(),
+              password: myPassWord.text.trim(),
+            );
+
+        User? user = userCredential.user;
+
+        if (user != null) {
+          // Navigate to the next screen after successful login
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HomePage1()),
+          );
+        }
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'user-not-found') {
+          setState(() {
+            errorMessageE = "No user found with this email.";
+          });
+        } else if (e.code == 'wrong-password') {
+          setState(() {
+            errorMessageP = "Incorrect password. Please try again.";
+          });
+        }
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -55,10 +90,7 @@ class _LoginPageState extends State<LoginPage> {
                   SizedBox(height: 5),
                   Text(
                     "Welcome to our app.",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                    ),
+                    style: TextStyle(color: Colors.white, fontSize: 15),
                   ),
                 ],
               ),
@@ -78,133 +110,246 @@ class _LoginPageState extends State<LoginPage> {
                   topRight: Radius.circular(50),
                 ),
               ),
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Login",
-                      style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                        color: Color.fromRGBO(2, 173, 103, 1.0),
-                      ),
-                    ),
-                    SizedBox(height: 20),
-                
-                    // Email Input Field
-                    TextField(
-                      controller: myEmail,
-                      decoration: InputDecoration(
-                        prefixIcon: Icon(Icons.mail),
-                        hintText: "Email",
-                        filled: true,
-                        fillColor: Colors.white,
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(50),
-                          borderSide: BorderSide(color: Colors.transparent, width: 0),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(50),
-                          borderSide: BorderSide(
-                            color: Color.fromRGBO(2, 173, 103, 1.0),
-                            width: 2,
-                          ),
+              child: Form(
+                key: formstate,
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Login",
+                        style: TextStyle(
+                          fontSize: 30,
+                          fontWeight: FontWeight.bold,
+                          color: Color.fromRGBO(2, 173, 103, 1.0),
                         ),
                       ),
-                    ),
-                
-                    SizedBox(height: 20),
-                
-                    // Password Input Field
-                    TextField(
-                      controller: myPassWord,
-                      obscureText: true, // Hides password input
-                      decoration: InputDecoration(
-                        prefixIcon: Icon(Icons.lock),
-                        hintText: "Password",
-                        filled: true,
-                        fillColor: Colors.white,
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(50),
-                          borderSide: BorderSide(color: Colors.transparent, width: 0),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(50),
-                          borderSide: BorderSide(
-                            color: Color.fromRGBO(2, 173, 103, 1.0),
-                            width: 2,
-                          ),
-                        ),
-                      ),
-                    ),
-                
-                    SizedBox(height: 5),
-                
-                    // Forgot Password Text (Aligned Right)
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () {
-                          // Add your forgot password logic here
+                      SizedBox(height: 20),
+
+                      // Email Input Field
+                      TextFormField(
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            setState(() {
+                              isEmailEmpty = true;
+                            });
+                            errorMessageE = "Email cannot be empty.";
+                            errorMessageV = '';
+                          } else if (!RegExp(
+                                r'^[^@]+@[^@]+\.[^@]+',
+                              ).hasMatch(value!) &&
+                              value.isNotEmpty) {
+                            setState(() {
+                              isEmailEmpty = true;
+                            });
+                            errorMessageV = "Write a valide email.";
+                            errorMessageE = '';
+                          } else {
+                            setState(() {
+                              errorMessageE = '';
+                              errorMessageV =
+                                  ''; // Clear both messages if email is valid
+                            });
+                          }
                         },
-                        child: Text(
-                          "Forgot Password?",
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Color.fromRGBO(2, 173, 103, 1.0),
+                        onChanged: (value) {
+                          if (isEmailEmpty) {
+                            setState(() {
+                              errorMessageE = '';
+                              errorMessageV = '';
+                            });
+                          }
+                        },
+                        controller: myEmail,
+                        decoration: InputDecoration(
+                          prefixIcon: Icon(Icons.mail),
+                          hintText: "Email",
+                          filled: true,
+                          fillColor: Colors.white,
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(50),
+                            borderSide: BorderSide(
+                              color:
+                                  isEmailEmpty
+                                      ? Colors.red
+                                      : Colors.transparent,
+                              width: 2,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(50),
+                            borderSide: BorderSide(
+                              color:
+                                  isEmailEmpty
+                                      ? Colors.red
+                                      : Color.fromRGBO(2, 173, 103, 1.0),
+                              width: 2,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                
-                    SizedBox(height: 20),
-                
-                    // Login Button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: login,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Color.fromRGBO(2, 173, 103, 1.0),
-                          
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                        ),
-                        child: Text(
-                          "Login",
-                          style: TextStyle(fontSize: 18, color: Colors.white),
-                        ),
-                      ),
-                    ),
-                
-                    SizedBox(height: 15),
-                
-                    // Divider with "or"
-                    Row(
-                      children: [
-                        Expanded(child: Divider(color: Colors.grey, thickness: 1)),
+                      // Error message for Email
+                      if (errorMessageE.isNotEmpty)
                         Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 10),
-                          child: Text("or", style: TextStyle(color: Colors.grey)),
+                          padding: EdgeInsets.only(left: 10, top: 5),
+                          child: Text(
+                            errorMessageE,
+                            style: TextStyle(color: Colors.red, fontSize: 14),
+                          ),
                         ),
-                        Expanded(child: Divider(color: Colors.grey, thickness: 1)),
-                      ],
-                    ),
-                
-                    SizedBox(height: 15),
-                
-                    // Social Media Login Buttons
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Google Button
-                        GestureDetector(
-                          //onTap: signInwithGoogle(),
-                          onTap:()=> signInwithGoogle(),
-                          child: Container(
+                      if (errorMessageV.isNotEmpty)
+                        Padding(
+                          padding: EdgeInsets.only(left: 10, top: 5),
+                          child: Text(
+                            errorMessageV,
+                            style: TextStyle(color: Colors.red, fontSize: 14),
+                          ),
+                        ),
+                      SizedBox(height: 20),
+
+                      // Password Input Field
+                      TextFormField(
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            setState(() {
+                              isPasswordEmpty = true;
+                            });
+                            errorMessageP = "Password cannot be empty.";
+                          }
+                          return null;
+                        },
+                        controller: myPassWord,
+                        obscureText: true, // Hides password input
+                        decoration: InputDecoration(
+                          prefixIcon: Icon(Icons.lock),
+                          hintText: "Password",
+                          filled: true,
+                          fillColor: Colors.white,
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(50),
+                            borderSide: BorderSide(
+                              color:
+                                  isPasswordEmpty
+                                      ? Colors.red
+                                      : Colors.transparent,
+                              width: 2,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(50),
+                            borderSide: BorderSide(
+                              color:
+                                  isPasswordEmpty
+                                      ? Colors.red
+                                      : Color.fromRGBO(2, 173, 103, 1.0),
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Error message for Password
+                      if (errorMessageP.isNotEmpty)
+                        Padding(
+                          padding: EdgeInsets.only(left: 10, top: 5),
+                          child: Text(
+                            errorMessageP,
+                            style: TextStyle(color: Colors.red, fontSize: 14),
+                          ),
+                        ),
+                      // Forgot Password Text (Aligned Right)
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () {
+                            // Add your forgot password logic here
+                          },
+                          child: Text(
+                            "Forgot Password?",
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Color.fromRGBO(2, 173, 103, 1.0),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(height: 20),
+
+                      // Login Button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            if (formstate.currentState!.validate()) {
+                              login();
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color.fromRGBO(2, 173, 103, 1.0),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                          child: Text(
+                            "Login",
+                            style: TextStyle(fontSize: 18, color: Colors.white),
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(height: 15),
+
+                      // Divider with "or"
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Divider(color: Colors.grey, thickness: 1),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 10),
+                            child: Text(
+                              "or",
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                          ),
+                          Expanded(
+                            child: Divider(color: Colors.grey, thickness: 1),
+                          ),
+                        ],
+                      ),
+
+                      SizedBox(height: 15),
+
+                      // Social Media Login Buttons
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          GestureDetector(
+                            onTap: () async {
+                              await signInwithGoogle();
+                            },
+                            child: Container(
+                              width: 70,
+                              height: 70,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(15),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 10,
+                                  ),
+                                ],
+                              ),
+                              child: Padding(
+                                padding: EdgeInsets.all(10),
+                                child: Image.asset("assets/Google.png"),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 30),
+                          Container(
                             width: 70,
                             height: 70,
                             decoration: BoxDecoration(
@@ -214,62 +359,40 @@ class _LoginPageState extends State<LoginPage> {
                                 BoxShadow(
                                   color: Colors.black.withOpacity(0.1),
                                   blurRadius: 10,
-                                )
+                                ),
                               ],
                             ),
                             child: Padding(
                               padding: EdgeInsets.all(10),
-                              child: Image.asset("assets/Google.png"),
+                              child: Image.asset("assets/facebook.png"),
                             ),
                           ),
-                        ),
-                
-                        SizedBox(width: 30),
-                
-                        // Facebook Button
-                        Container(
-                          width: 70,
-                          height: 70,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(15),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 10,
-                              )
-                            ],
-                          ),
-                          child: Padding(
-                            padding: EdgeInsets.all(10),
-                            child: Image.asset("assets/facebook.png"),
-                          ),
-                        ),
-                      ],
-                    ),
-                
-                    SizedBox(height: 20),
-                
-                    // Sign-up Text
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text("Don't have an account?"),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/signupPage');
-                          },
-                          child: Text(
-                            "Sign up",
-                            style: TextStyle(
-                              color: Color.fromRGBO(2, 173, 103, 1.0),
-                              fontWeight: FontWeight.bold,
+                        ],
+                      ),
+
+                      SizedBox(height: 20),
+
+                      // Sign-up Text
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text("Don't have an account?"),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pushNamed(context, '/signupPage');
+                            },
+                            child: Text(
+                              "Sign up",
+                              style: TextStyle(
+                                color: Color.fromRGBO(2, 173, 103, 1.0),
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
