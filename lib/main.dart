@@ -10,6 +10,9 @@ wa9teli ya3mal sign up ttsajal el ma3loumat mta3a fi el fire base
 step3:
 el button mta3 el Google te5dem bel s7i7
 ++
+
+step4:
+add the informations of the user to fire store
 */ 
 
 

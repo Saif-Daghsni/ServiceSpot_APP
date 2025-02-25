@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -14,21 +15,40 @@ class _SignupPageState extends State<SignupPage> {
   TextEditingController passWord = TextEditingController();
   TextEditingController confirmPassword = TextEditingController();
   TextEditingController phoneNumber = TextEditingController();
+  TextEditingController location = TextEditingController();
 
-
-  Future signup() async{
+  Future signup() async {
     try {
-        if(passWord.text.trim() == confirmPassword.text.trim()){
-        await FirebaseAuth.instance.createUserWithEmailAndPassword(
-          email: email.text.trim(), 
-          password: passWord.text.trim());
-          Navigator.pushNamed(context, '/auth');
-        }
-        else{
-          print("****confirmPassword error****");
-        }
+      if (passWord.text.trim() != confirmPassword.text.trim()) {
+        print("**** Passwords do not match ****");
+        return;
+      }
+
+      // Create user in Firebase Authentication
+      UserCredential userCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+            email: email.text.trim(),
+            password: passWord.text.trim(),
+          );
+
+      // Ensure Firestore is initialized before using it
+      await FirebaseFirestore.instance
+          .collection('users') // Collection name
+          .doc(userCredential.user!.uid) // Use UID as document ID
+          .set({
+            'username': userName.text.trim(),
+            'email': email.text.trim(),
+            'phone': phoneNumber.text.trim(),
+            'location': location.text.trim(),
+            'createdAt': FieldValue.serverTimestamp(), // Store timestamp
+          });
+
+      print("User registered and data saved to Firestore!");
+
+      // Navigate after successful signup
+      Navigator.pushNamed(context, '/auth');
     } catch (e) {
-      print("***********Signup error ************");
+      print("Signup error: $e"); // Print the actual error
     }
   }
 
@@ -39,6 +59,7 @@ class _SignupPageState extends State<SignupPage> {
     passWord.dispose();
     confirmPassword.dispose();
     phoneNumber.dispose();
+    location.dispose();
     super.dispose();
   }
 
@@ -104,7 +125,7 @@ class _SignupPageState extends State<SignupPage> {
                       ],
                     ),
                     SizedBox(height: 10),
-                
+
                     Text(
                       "Sign Up",
                       style: TextStyle(
@@ -114,25 +135,25 @@ class _SignupPageState extends State<SignupPage> {
                       ),
                     ),
                     SizedBox(height: 20),
-                
+
                     // User Name Input Field
                     _buildTextField(
                       controller: userName,
                       icon: Icons.person,
                       hintText: "User Name",
                     ),
-                
+
                     SizedBox(height: 20),
-                
+
                     // Email Input Field
                     _buildTextField(
                       controller: email,
                       icon: Icons.mail,
                       hintText: "Email",
                     ),
-                
+
                     SizedBox(height: 20),
-                
+
                     // Password Input Field
                     _buildTextField(
                       controller: passWord,
@@ -140,9 +161,9 @@ class _SignupPageState extends State<SignupPage> {
                       hintText: "Password",
                       obscureText: true,
                     ),
-                
+
                     SizedBox(height: 20),
-                
+
                     // Confirm Password Input Field
                     _buildTextField(
                       controller: confirmPassword,
@@ -150,28 +171,27 @@ class _SignupPageState extends State<SignupPage> {
                       hintText: "Confirm Password",
                       obscureText: true,
                     ),
-                
+
                     SizedBox(height: 20),
-                
+
                     // Phone Number Input Field
                     _buildTextField(
                       controller: phoneNumber,
                       icon: Icons.phone,
                       hintText: "Phone Number",
                     ),
-                
+
                     SizedBox(height: 20),
-                
+
+                    // Location Input Field
                     _buildTextField(
-                      controller: phoneNumber,
+                      controller: location,
                       icon: Icons.location_on,
-                      hintText: "Localisation",
+                      hintText: "Location",
                     ),
-                
+
                     SizedBox(height: 35),
-                
-                    
-                
+
                     // Sign Up Button
                     SizedBox(
                       width: double.infinity,
