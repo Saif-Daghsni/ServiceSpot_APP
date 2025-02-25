@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -9,10 +10,35 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  final user = FirebaseAuth.instance.currentUser!;
+  TextEditingController userNameController = TextEditingController();
+  TextEditingController phoneNumberController = TextEditingController();
+
+  Future<void> _fetchUserData() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      DocumentSnapshot userData = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      // Set the data in the text controllers
+      userNameController.text = userData['username'] ?? 'No Username';
+      phoneNumberController.text = userData['phone'] ?? 'No Phone Number';
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserData(); // Call to fetch user data when the page is loaded
+  }
+
   @override
   Widget build(BuildContext context) {
-    return  Scaffold(
+    // ignore: unused_local_variable
+    final user = FirebaseAuth.instance.currentUser!;
+
+    return Scaffold(
       backgroundColor: Color.fromRGBO(235, 239, 238, 1.0),
       body: Column(
         children: [
@@ -30,32 +56,30 @@ class _ProfilePageState extends State<ProfilePage> {
               child: Row(
                 children: [
                   Icon(
-                  Icons.person, 
-                  color: Colors.white,
-                  size: 90,
+                    Icons.person,
+                    color: Colors.white,
+                    size: 90,
                   ),
-
                   SizedBox(width: 10),
-
                   SizedBox(
                     width: 140,
                     height: 90,
-                    child:Column(
-                    mainAxisAlignment: MainAxisAlignment.center, // Center text vertically
-                    crossAxisAlignment: CrossAxisAlignment.center, // Center text horizontally
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "User Name",
+                          userNameController.text,
                           style: TextStyle(
-                            fontSize:20,
+                            fontSize: 20,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
                         ),
                         Text(
-                          "51019312",
+                          phoneNumberController.text,
                           style: TextStyle(
-                            fontSize:20,
+                            fontSize: 20,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
@@ -63,12 +87,10 @@ class _ProfilePageState extends State<ProfilePage> {
                       ],
                     ),
                   ),
-
                 ],
               ),
             ),
           ),
-
           Expanded(
             flex: 3,
             child: Container(
@@ -84,177 +106,148 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
                   SizedBox(height: 20),
-                  
                   GestureDetector(
-                  onTap: () {
-                    Navigator.pushNamed(context, '/editeProfilePage');
-                  },            
-                  child : Container(
-                  height: 55,
-                  width: double.infinity,
-                  padding: EdgeInsets.symmetric(horizontal: 20), // Padding inside the container
-                  decoration: BoxDecoration(
-                    color: Color.fromRGBO(125, 125, 125, 1.0),
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween, // Aligns text & arrow
-                    children: [
-                      Row(
+                    onTap: () {
+                      Navigator.pushNamed(context, '/editeProfilePage');
+                    },
+                    child: Container(
+                      height: 55,
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      decoration: BoxDecoration(
+                        color: Color.fromRGBO(125, 125, 125, 1.0),
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Icon(Icons.edit, color: Colors.white), // Icon before text
-                          SizedBox(width: 15), // Space between icon and text
-                          Text(
-                            "Edit Profile",
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                     ),
-                      Icon(Icons.chevron_right, color: Colors.white), // Small arrow on the right
-                    ],
-                  ),
-                ),
-                ),
-                
-                SizedBox(height: 10),
-                  
-                  GestureDetector(
-                  onTap: () {
-                    Navigator.pushNamed(context, '/addServicePage');
-                  },            
-                  child : Container(
-                  height: 55,
-                  width: double.infinity,
-                  padding: EdgeInsets.symmetric(horizontal: 20), // Padding inside the container
-                  decoration: BoxDecoration(
-                    color: Color.fromRGBO(125, 125, 125, 1.0),
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween, // Aligns text & arrow
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.handyman, color: Colors.white), // Icon before text
-                          SizedBox(width: 15), // Space between icon and text
-                          Text(
-                            "Add service",
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                     ),
-                      Icon(Icons.chevron_right, color: Colors.white), // Small arrow on the right
-                    ],
-                  ),
-
-
-                  
-                ),
-
-                ),
-
-
-                 SizedBox(height: 10),
-                  
-                  GestureDetector(
-                  onTap: () {
-                    Navigator.pushNamed(context, '/settingsPage');
-                  },            
-                  child : Container(
-                  height: 55,
-                  width: double.infinity,
-                  padding: EdgeInsets.symmetric(horizontal: 20), // Padding inside the container
-                  decoration: BoxDecoration(
-                    color: Color.fromRGBO(125, 125, 125, 1.0),
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween, // Aligns text & arrow
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.settings, color: Colors.white), // Icon before text
-                          SizedBox(width: 15), // Space between icon and text
-                          Text(
-                            "Settings",
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                     ),
-                      Icon(Icons.chevron_right, color: Colors.white), // Small arrow on the right
-                    ],
-                  ),
-
-
-                  
-                ),
-                  ),
-
-
-
-                 SizedBox(height: 10),
-                 Spacer(), 
-                 GestureDetector(
-                  onTap: () {
-                  Navigator.pushNamed(context, '/loginPage');
-                 },
-
-
-
-                //Logout
-               child: GestureDetector(
-                
-                onTap:(){
-                  FirebaseAuth.instance.signOut();
-                },
-                 child: Container(
-                    height: 55,
-                    width: double.infinity,
-                    padding: EdgeInsets.symmetric(horizontal: 20), // Padding inside the container
-                    decoration: BoxDecoration(
-                      color: Color.fromRGBO(211, 47, 47,1.0),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween, // Aligns text & arrow
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.logout, color: Colors.white), // Icon before text
-                            SizedBox(width: 15), // Space between icon and text
-                            Text(
-                              "Logout ",
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.white,
+                          Row(
+                            children: [
+                              Icon(Icons.edit, color: Colors.white),
+                              SizedBox(width: 15),
+                              Text(
+                                "Edit Profile",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.white,
+                                ),
                               ),
-                            ),
-                          ],
-                       ),
-                        Icon(Icons.chevron_right, color: Colors.white), // Small arrow on the right
-                      ],
-                    ), 
+                            ],
+                          ),
+                          Icon(Icons.chevron_right, color: Colors.white),
+                        ],
+                      ),
+                    ),
                   ),
-               ),
-              ),
-                SizedBox(height: 10),
-
+                  SizedBox(height: 10),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pushNamed(context, '/addServicePage');
+                    },
+                    child: Container(
+                      height: 55,
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      decoration: BoxDecoration(
+                        color: Color.fromRGBO(125, 125, 125, 1.0),
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.handyman, color: Colors.white),
+                              SizedBox(width: 15),
+                              Text(
+                                "Add service",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Icon(Icons.chevron_right, color: Colors.white),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pushNamed(context, '/settingsPage');
+                    },
+                    child: Container(
+                      height: 55,
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      decoration: BoxDecoration(
+                        color: Color.fromRGBO(125, 125, 125, 1.0),
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.settings, color: Colors.white),
+                              SizedBox(width: 15),
+                              Text(
+                                "Settings",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Icon(Icons.chevron_right, color: Colors.white),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  Spacer(),
+                  GestureDetector(
+                    onTap: () {
+                      FirebaseAuth.instance.signOut();
+                    },
+                    child: Container(
+                      height: 55,
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      decoration: BoxDecoration(
+                        color: Color.fromRGBO(211, 47, 47, 1.0),
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.logout, color: Colors.white),
+                              SizedBox(width: 15),
+                              Text(
+                                "Logout",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Icon(Icons.chevron_right, color: Colors.white),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
-          )
+          ),
         ],
-      )
-
+      ),
     );
   }
 }

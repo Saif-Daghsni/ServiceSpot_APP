@@ -13,6 +13,9 @@ el button mta3 el Google te5dem bel s7i7
 
 step4:
 add the informations of the user to fire store
+
+step5:
+yekteb fi les information mta£a fi el profile page
 */ 
 
 
@@ -28,6 +31,7 @@ import 'package:servicespot/pages/editeProfileWorker_page.dart';
 import 'package:servicespot/pages/editeProfile_page.dart';
 import 'package:servicespot/pages/home_page.dart';
 import 'package:servicespot/pages/login_page.dart';
+import 'package:servicespot/pages/profile_page.dart';
 import 'package:servicespot/pages/settings_page.dart';
 import 'package:servicespot/pages/signup_page.dart';
 
@@ -61,6 +65,7 @@ class MyApp extends StatelessWidget {
         '/settingsPage': (context) => SettingsPage(),
         '/editeProfileWorker': (context) => EditeprofileworkerPage(),
         '/forgetPasswordPage': (context) => ForgetpasswordPage(),
+        '/profilePage': (context) => ProfilePage(),
         
       },
     );

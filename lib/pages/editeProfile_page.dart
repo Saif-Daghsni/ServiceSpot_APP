@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class EditeprofilePage extends StatefulWidget {
   const EditeprofilePage({super.key});
@@ -8,6 +10,54 @@ class EditeprofilePage extends StatefulWidget {
 }
 
 class _EditeprofilePageState extends State<EditeprofilePage> {
+  TextEditingController userNameController = TextEditingController();
+  TextEditingController emailController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
+  TextEditingController phoneNumberController = TextEditingController();
+  TextEditingController locationController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserData();
+  }
+
+  // Fetch the current user's data from Firestore
+  Future<void> _fetchUserData() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      DocumentSnapshot userData =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .get();
+
+      // Set the data in the text controllers
+      userNameController.text = userData['username'] ?? '';
+      emailController.text = userData['email'] ?? '';
+      phoneNumberController.text = userData['phone'] ?? '';
+      locationController.text = userData['location'] ?? '';
+      passwordController.text = userData['password'] ?? '';
+    }
+  }
+
+  // Update the user data in Firestore
+  Future<void> _updateUserData() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .update({
+            'username': userNameController.text,
+            'email': emailController.text,
+            'phone': phoneNumberController.text,
+            'location': locationController.text,
+          });
+      print("User data updated successfully!");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -40,132 +90,146 @@ class _EditeprofilePageState extends State<EditeprofilePage> {
       body: Padding(
         padding: EdgeInsets.only(left: 40, right: 20, top: 30, bottom: 30),
 
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center, // Center text vertically
-          crossAxisAlignment:
-              CrossAxisAlignment.center, // Center text horizontally
-          children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                "User Name",
-                style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
-              ),
-            ),
-
-            SizedBox(height: 10),
-
-            // User Name Input Field
-            _buildTextField(
-              //controller: userName,
-              icon: Icons.person,
-              hintText: "User Name",
-            ),
-
-            SizedBox(height: 10),
-
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                "Email",
-                style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
-              ),
-            ),
-
-            SizedBox(height: 10),
-            // User Name Input Field
-            _buildTextField(
-              //controller: userName,
-              icon: Icons.mail,
-              hintText: "Email",
-            ),
-            SizedBox(height: 10),
-
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                "Password",
-                style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
-              ),
-            ),
-
-            SizedBox(height: 10),
-            // Password Input Field
-            _buildTextField(
-              //controller: userName,
-              icon: Icons.lock,
-              hintText: " password",
-            ),
-            SizedBox(height: 10),
-
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                "Phone Number",
-                style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
-              ),
-            ),
-
-            SizedBox(height: 10),
-            // Phone Number Input Field
-            _buildTextField(
-              //controller: phoneNumber,
-              icon: Icons.phone,
-              hintText: "phoneNumber",
-            ),
-            SizedBox(height: 10),
-
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                "Localisation",
-                style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
-              ),
-            ),
-
-            SizedBox(height: 10),
-            // Phone Number Input Field
-            _buildTextField(
-              //controller: phoneNumber,
-              icon: Icons.location_on,
-              hintText: "Localisation",
-            ),
-            SizedBox(height: 50),
-
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/editeProfileWorker');
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment:
+                MainAxisAlignment.center, // Center text vertically
+            crossAxisAlignment:
+                CrossAxisAlignment.center, // Center text horizontally
+            children: [
+              GestureDetector(
+                onTap: () {
+                  Navigator.pushNamed(context, '/auth');
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color.fromRGBO(2, 173, 103, 1.0),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.arrow_back,
+                      color: Color.fromRGBO(2, 173, 103, 1.0),
+                    ),
+                    SizedBox(width: 5),
+                    Text(
+                      "Back to the Profile",
+                      style: TextStyle(
+                        fontSize: 17,
+                        color: Color.fromRGBO(2, 173, 103, 1.0),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 30),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "User Name",
+                  style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
+                ),
+              ),
+
+              SizedBox(height: 10),
+              _buildTextField(userNameController, Icons.person, "User Name"),
+
+              SizedBox(height: 10),
+
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "Email",
+                  style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
+                ),
+              ),
+
+              SizedBox(height: 10),
+              _buildTextField(emailController, Icons.mail, "Email"),
+              SizedBox(height: 10),
+
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "Password",
+                  style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
+                ),
+              ),
+
+              SizedBox(height: 10),
+              _buildTextField(
+                passwordController,
+                Icons.lock,
+                "Password",
+                obscureText: true,
+              ),
+              SizedBox(height: 10),
+
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "Phone Number",
+                  style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
+                ),
+              ),
+
+              SizedBox(height: 10),
+              _buildTextField(
+                phoneNumberController,
+                Icons.phone,
+                "Phone Number",
+              ),
+              SizedBox(height: 10),
+
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "Location",
+                  style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
+                ),
+              ),
+
+              SizedBox(height: 10),
+              _buildTextField(
+                locationController,
+                Icons.location_on,
+                "Location",
+              ),
+
+              SizedBox(height: 50),
+
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () {
+                    _updateUserData();
+                    Navigator.pushNamed(context, '/profilePage');
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color.fromRGBO(2, 173, 103, 1.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                  child: Text(
+                    "Save",
+                    style: TextStyle(fontSize: 18, color: Colors.white),
                   ),
                 ),
-                child: Text(
-                  "Save",
-                  style: TextStyle(fontSize: 18, color: Colors.white),
-                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-Widget _buildTextField({
-  //required TextEditingController controller,
-  required IconData icon,
-  required String hintText,
+Widget _buildTextField(
+  TextEditingController controller,
+  IconData icon,
+  String hintText, {
   bool obscureText = false,
 }) {
   return TextField(
-    //controller: controller,
+    controller: controller,
     obscureText: obscureText,
     decoration: InputDecoration(
       prefixIcon: Icon(icon),
