@@ -9,8 +9,7 @@ wa9teli ya3mal sign up ttsajal el ma3loumat mta3a fi el fire base
 
 step3:
 el button mta3 el Google te5dem bel s7i7
-+
-
+++
 */ 
 
 
@@ -19,6 +18,7 @@ el button mta3 el Google te5dem bel s7i7
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:servicespot/pages/ForgetPassword_page.dart';
 import 'package:servicespot/pages/addService_page.dart';
 import 'package:servicespot/pages/auth.dart';
 import 'package:servicespot/pages/editeProfileWorker_page.dart';
@@ -57,6 +57,8 @@ class MyApp extends StatelessWidget {
         '/addServicePage': (context) => AddservicePage(),
         '/settingsPage': (context) => SettingsPage(),
         '/editeProfileWorker': (context) => EditeprofileworkerPage(),
+        '/forgetPasswordPage': (context) => ForgetpasswordPage(),
+        
       },
     );
   }

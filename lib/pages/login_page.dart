@@ -13,6 +13,9 @@ class LoginPage extends StatefulWidget {
 bool isEmailEmpty = false;
 bool isPasswordEmpty = false;
 
+bool falseEmail = false;
+bool falsePassword = false;
+
 class _LoginPageState extends State<LoginPage> {
   GlobalKey<FormState> formstate = GlobalKey();
 
@@ -21,6 +24,7 @@ class _LoginPageState extends State<LoginPage> {
 
   String errorMessageP = '';
   String errorMessageE = '';
+  String errorMessageEE = '';
   String errorMessageV = '';
 
   void login() async {
@@ -43,15 +47,29 @@ class _LoginPageState extends State<LoginPage> {
           );
         }
       } on FirebaseAuthException catch (e) {
+        print("FirebaseAuthException: ${e.code}"); // Print the error code
+
         if (e.code == 'user-not-found') {
           setState(() {
             errorMessageE = "No user found with this email.";
           });
+          print("No user found with this email.");
         } else if (e.code == 'wrong-password') {
           setState(() {
             errorMessageP = "Incorrect password. Please try again.";
           });
+          print("Incorrect password. Please try again.");
+        } else {
+          setState(() {
+            errorMessageP =
+                "An unknown error occurred. Please try again later.";
+          });
+          print("An unknown error occurred: ${e.message}");
         }
+      } catch (e) {
+        setState(() {
+          errorMessageE = "An unexpected error occurred. Please try again.";
+        });
       }
     }
   }
@@ -89,7 +107,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   SizedBox(height: 5),
                   Text(
-                    "Welcome to our app.",
+                    "Welcome to ServiceSpot.",
                     style: TextStyle(color: Colors.white, fontSize: 15),
                   ),
                 ],
@@ -130,35 +148,21 @@ class _LoginPageState extends State<LoginPage> {
                       TextFormField(
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            setState(() {
-                              isEmailEmpty = true;
-                            });
+                            isEmailEmpty = true;
                             errorMessageE = "Email cannot be empty.";
                             errorMessageV = '';
                           } else if (!RegExp(
                                 r'^[^@]+@[^@]+\.[^@]+',
-                              ).hasMatch(value!) &&
+                              ).hasMatch(value) &&
                               value.isNotEmpty) {
-                            setState(() {
-                              isEmailEmpty = true;
-                            });
+                            isEmailEmpty = true;
                             errorMessageV = "Write a valide email.";
                             errorMessageE = '';
-                          } else {
-                            setState(() {
-                              errorMessageE = '';
-                              errorMessageV =
-                                  ''; // Clear both messages if email is valid
-                            });
                           }
+                          return null;
                         },
                         onChanged: (value) {
-                          if (isEmailEmpty) {
-                            setState(() {
-                              errorMessageE = '';
-                              errorMessageV = '';
-                            });
-                          }
+                          isEmailEmpty = false;
                         },
                         controller: myEmail,
                         decoration: InputDecoration(
@@ -261,7 +265,7 @@ class _LoginPageState extends State<LoginPage> {
                         alignment: Alignment.centerRight,
                         child: TextButton(
                           onPressed: () {
-                            // Add your forgot password logic here
+                            Navigator.pushNamed(context, '/forgetPasswordPage');
                           },
                           child: Text(
                             "Forgot Password?",
@@ -282,6 +286,7 @@ class _LoginPageState extends State<LoginPage> {
                         child: ElevatedButton(
                           onPressed: () {
                             if (formstate.currentState!.validate()) {
+                              isEmailEmpty = false;
                               login();
                             }
                           },
