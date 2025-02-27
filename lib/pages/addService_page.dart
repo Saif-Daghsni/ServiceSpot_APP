@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class AddservicePage extends StatefulWidget {
@@ -8,146 +10,158 @@ class AddservicePage extends StatefulWidget {
 }
 
 class _AddservicePageState extends State<AddservicePage> {
+  TextEditingController serviceController = TextEditingController();
+  TextEditingController priceController = TextEditingController();
+  TextEditingController userName = TextEditingController();
+  TextEditingController email = TextEditingController();
+  TextEditingController location = TextEditingController();
+  TextEditingController phoneNumber = TextEditingController();
+
+
+ @override
+void initState() {
+  super.initState();
+  _fetchUserData();
+}
+
+/// Function to fetch user data from Firestore
+Future<void> _fetchUserData() async {
+  User? user = FirebaseAuth.instance.currentUser;
+  if (user != null) {
+    try {
+      DocumentSnapshot userData = await FirebaseFirestore.instance
+          .collection('users') // Make sure this is the correct collection
+          .doc(user.uid)
+          .get();
+
+      if (userData.exists) {
+        setState(() {
+          userName.text = userData['username'] ?? 'No Username';
+          phoneNumber.text = userData['phone'] ?? 'No Phone Number';
+          email.text = userData['email'] ?? 'No Email'; // Fixed typo
+          location.text = userData['location'] ?? 'No Location';
+        });
+      }
+    } catch (e) {
+      print("Error fetching user data: $e");
+    }
+  }
+}
+
+/// Function to save data in Firestore
+Future<void> _saveData() async {
+  User? user = FirebaseAuth.instance.currentUser;
+  if (user != null) {
+    try {
+      await FirebaseFirestore.instance.collection('workers').doc(user.uid).set({
+        'username': userName.text,
+        'phone': phoneNumber.text,
+        'email': email.text,
+        'service': serviceController.text,
+        'price': priceController.text,
+        'location': location.text,
+        'userId': user.uid, 
+      });
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Service saved successfully!")),
+      );
+
+      // Navigate to favorite page
+      Navigator.pushNamed(context, '/auth');
+    } catch (e) {
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to save service: $e")),
+      );
+    }
+  }
+}
+
+
   @override
   Widget build(BuildContext context) {
-    return  Scaffold(
-      
-      backgroundColor: Color.fromRGBO(235, 239, 238, 1.0),
+    return Scaffold(
+      backgroundColor: const Color.fromRGBO(235, 239, 238, 1.0),
       appBar: AppBar(
-        backgroundColor: Color.fromRGBO(2, 173, 103, 1.0),
+        backgroundColor: const Color.fromRGBO(2, 173, 103, 1.0),
         title: const Align(
-          alignment: Alignment.center, // Align app name to the left
-          child: Text("Add Service",
-          style: TextStyle(
-            color: Color.fromRGBO(235, 239, 238, 1.0),
-            fontWeight: FontWeight.bold,
-          ),),
+          alignment: Alignment.center,
+          child: Text(
+            "Add Service",
+            style: TextStyle(
+              color: Color.fromRGBO(235, 239, 238, 1.0),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications,
-            color: Color.fromRGBO(235, 239, 238, 1.0)), // Notification icon
+            icon: const Icon(
+              Icons.notifications,
+              color: Color.fromRGBO(235, 239, 238, 1.0),
+            ),
             onPressed: () {
               Navigator.pushNamed(context, '/loginPage');
             },
           ),
         ],
       ),
-      
+
       body: Padding(
-        
-        padding: EdgeInsets.only(left: 30, right: 20,top: 30, bottom: 30),
-
-        child: Column(
-        mainAxisAlignment: MainAxisAlignment.center, // Center text vertically
-        crossAxisAlignment: CrossAxisAlignment.center, // Center text horizontally
-        children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child :Text(
-                    "The service",
-                    style: TextStyle(
-                      fontSize: 23,
-                      fontWeight: FontWeight.bold,
+        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              _buildLabel("The service"),
+              _buildTextField(serviceController, Icons.handyman, "Write your service"),
+              _buildLabel("The price per hour"),
+              _buildTextField(priceController, Icons.attach_money, "The price per hour"),
+              const SizedBox(height: 50),
+          
+              // Save Button
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: _saveData, // Call the save function
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color.fromRGBO(2, 173, 103, 1.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
                     ),
                   ),
-          ),
-          
-          SizedBox(height: 10),
-
-          
-          // User Name Input Field
-          _buildTextField(
-          //controller: userName,
-          icon: Icons.handyman,
-          hintText: "The service",
-          ),
-
-
-          SizedBox(height: 10),
-
-
-          Align(
-            alignment: Alignment.centerLeft,
-            child :Text(
-                    "The price par hour",
-                    style: TextStyle(
-                      fontSize: 23,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  child: const Text(
+                    "Save",
+                    style: TextStyle(fontSize: 18, color: Colors.white),
                   ),
+                ),
+              ),
+            ],
           ),
-          
-          SizedBox(height: 10),
-
-          
-          // User Name Input Field
-          _buildTextField(
-          //controller: userName,
-          icon: Icons.attach_money,
-          hintText: "The price par hour",
-          ),
-
-          SizedBox(height: 10),
-
-          Align(
-            alignment: Alignment.centerLeft,
-            child :Text(
-                    "Localisation",
-                    style: TextStyle(
-                      fontSize: 23,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-          ),
-
-
-          SizedBox(height: 10),
-          // Phone Number Input Field
-          _buildTextField(
-          //controller: phoneNumber,
-          icon: Icons.location_on,
-          hintText: "Localisation",
-          ),
-          SizedBox(height: 50),
-
-          SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/favoritePage');
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color.fromRGBO(2, 173, 103, 1.0),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                      ),
-                      child: Text(
-                        "Save",
-                        style: TextStyle(fontSize: 18, color: Colors.white),
-                      ),
-                    ),
-                  ),
-
-        ],
         ),
       ),
     );
   }
-}
 
+  Widget _buildLabel(String text) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 10, bottom: 5),
+        child: Text(
+          text,
+          style: const TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
+        ),
+      ),
+    );
+  }
 
-Widget _buildTextField({
-    //required TextEditingController controller,
-    required IconData icon,
-    required String hintText,
-    bool obscureText = false,
-  }) {
+  Widget _buildTextField(TextEditingController controller, IconData icon, String hintText) {
     return TextField(
-      //controller: controller,
-      obscureText: obscureText,
+      controller: controller,
       decoration: InputDecoration(
         prefixIcon: Icon(icon),
         hintText: hintText,
@@ -155,11 +169,11 @@ Widget _buildTextField({
         fillColor: Colors.white,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(50),
-          borderSide: BorderSide(color: Colors.transparent, width: 0),
+          borderSide: const BorderSide(color: Colors.transparent, width: 0),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(50),
-          borderSide: BorderSide(
+          borderSide: const BorderSide(
             color: Color.fromRGBO(2, 173, 103, 1.0),
             width: 2,
           ),
@@ -167,3 +181,4 @@ Widget _buildTextField({
       ),
     );
   }
+}

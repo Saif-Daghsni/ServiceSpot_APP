@@ -15,7 +15,10 @@ step4:
 add the informations of the user to fire store
 
 step5:
-yekteb fi les information mta£a fi el profile page
+yekteb fi les informations mta3a fi el profile page
+
+step6:
+add service te5dem
 */ 
 
 
