@@ -53,7 +53,7 @@ class _HomePage1State extends State<HomePage1> {
               color: Color.fromRGBO(235, 239, 238, 1.0),
             ),
             onPressed: () {
-              Navigator.pushNamed(context, '/loginPage');
+              Navigator.pushNamed(context, '/maps');
             },
           ),
         ],

@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:servicespot/pages/Maps.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -16,6 +17,19 @@ class _SignupPageState extends State<SignupPage> {
   TextEditingController confirmPassword = TextEditingController();
   TextEditingController phoneNumber = TextEditingController();
   TextEditingController location = TextEditingController();
+
+  Future<void> _navigateToMap() async {
+    final selectedLocation = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const MapScreen()),
+    );
+
+    if (selectedLocation != null) {
+      setState(() {
+        location.text = selectedLocation;
+      });
+    }
+  }
 
   Future signup() async {
     try {
@@ -184,10 +198,15 @@ class _SignupPageState extends State<SignupPage> {
                     SizedBox(height: 20),
 
                     // Location Input Field
-                    _buildTextField(
-                      controller: location,
-                      icon: Icons.location_on,
-                      hintText: "Location",
+                    GestureDetector(
+                      onTap: _navigateToMap,
+                      child: AbsorbPointer(
+                        child: _buildTextField(
+                          controller: location,
+                          icon: Icons.location_on,
+                          hintText: "Tap to choose location",
+                        ),
+                      ),
                     ),
 
                     SizedBox(height: 35),

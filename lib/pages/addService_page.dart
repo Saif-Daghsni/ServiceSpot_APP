@@ -1,6 +1,12 @@
+// ignore_for_file: use_build_context_synchronously
+
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class AddservicePage extends StatefulWidget {
   const AddservicePage({super.key});
@@ -10,6 +16,9 @@ class AddservicePage extends StatefulWidget {
 }
 
 class _AddservicePageState extends State<AddservicePage> {
+
+  String imageUrl='';
+
   TextEditingController serviceController = TextEditingController();
   TextEditingController priceController = TextEditingController();
   TextEditingController userName = TextEditingController();
@@ -17,68 +26,70 @@ class _AddservicePageState extends State<AddservicePage> {
   TextEditingController location = TextEditingController();
   TextEditingController phoneNumber = TextEditingController();
 
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserData();
+  }
 
- @override
-void initState() {
-  super.initState();
-  _fetchUserData();
-}
+  /// Function to fetch user data from Firestore
+  Future<void> _fetchUserData() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        DocumentSnapshot userData =
+            await FirebaseFirestore.instance
+                .collection('users') // Make sure this is the correct collection
+                .doc(user.uid)
+                .get();
 
-/// Function to fetch user data from Firestore
-Future<void> _fetchUserData() async {
-  User? user = FirebaseAuth.instance.currentUser;
-  if (user != null) {
-    try {
-      DocumentSnapshot userData = await FirebaseFirestore.instance
-          .collection('users') // Make sure this is the correct collection
-          .doc(user.uid)
-          .get();
-
-      if (userData.exists) {
-        setState(() {
-          userName.text = userData['username'] ?? 'No Username';
-          phoneNumber.text = userData['phone'] ?? 'No Phone Number';
-          email.text = userData['email'] ?? 'No Email'; // Fixed typo
-          location.text = userData['location'] ?? 'No Location';
-        });
+        if (userData.exists) {
+          setState(() {
+            userName.text = userData['username'] ?? 'No Username';
+            phoneNumber.text = userData['phone'] ?? 'No Phone Number';
+            email.text = userData['email'] ?? 'No Email'; // Fixed typo
+            location.text = userData['location'] ?? 'No Location';
+          });
+        }
+      } catch (e) {
+        print("Error fetching user data: $e");
       }
-    } catch (e) {
-      print("Error fetching user data: $e");
     }
   }
-}
 
-/// Function to save data in Firestore
-Future<void> _saveData() async {
-  User? user = FirebaseAuth.instance.currentUser;
-  if (user != null) {
-    try {
-      await FirebaseFirestore.instance.collection('workers').doc(user.uid).set({
-        'username': userName.text,
-        'phone': phoneNumber.text,
-        'email': email.text,
-        'service': serviceController.text,
-        'price': priceController.text,
-        'location': location.text,
-        'userId': user.uid, 
-      });
+  /// Function to save data in Firestore
+  Future<void> _saveData() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        await FirebaseFirestore.instance
+            .collection('workers')
+            .doc(user.uid)
+            .set({
+              'username': userName.text,
+              'phone': phoneNumber.text,
+              'email': email.text,
+              'service': serviceController.text,
+              'price': priceController.text,
+              'location': location.text,
+              'userId': user.uid,
+            });
 
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Service saved successfully!")),
-      );
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Service saved successfully!")),
+        );
 
-      // Navigate to favorite page
-      Navigator.pushNamed(context, '/auth');
-    } catch (e) {
-      // Show error message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to save service: $e")),
-      );
+        // Navigate to favorite page
+        Navigator.pushNamed(context, '/auth');
+      } catch (e) {
+        // Show error message
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Failed to save service: $e")));
+      }
     }
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
@@ -116,11 +127,69 @@ Future<void> _saveData() async {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               _buildLabel("The service"),
-              _buildTextField(serviceController, Icons.handyman, "Write your service"),
+              _buildTextField(
+                serviceController,
+                Icons.handyman,
+                "Write your service",
+              ),
               _buildLabel("The price per hour"),
-              _buildTextField(priceController, Icons.attach_money, "The price per hour"),
+              _buildTextField(
+                priceController,
+                Icons.attach_money,
+                "The price per hour",
+              ),
               const SizedBox(height: 50),
-          
+
+              // add photos
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed:()async {
+                    ImagePicker imagePicker=ImagePicker();
+                    XFile ? file = await imagePicker.pickImage(source:ImageSource.gallery);
+
+                    if(file==null)return;
+
+                    Reference referenceRoot = FirebaseStorage.instance.ref();
+                    Reference referenceDirImages = referenceRoot.child('images');
+
+                    Reference referenceImagetoUpload = referenceDirImages.child("workers photos");
+
+                    try {
+
+                    await referenceImagetoUpload.putFile(File(file!.path));
+
+                    imageUrl = await referenceImagetoUpload.getDownloadURL();
+                      
+                    } catch (e) {
+                      
+                    }
+                  }, 
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(
+                        50,
+                      ), // Correct way to set border radius
+                      side: const BorderSide(
+                        // Add border here instead of `decoration`
+                        color: Color.fromRGBO(2, 173, 103, 1.0),
+                        width: 2,
+                      ),
+                    ),
+                  ),
+                  child: const Text(
+                    "Add Photos",
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Color.fromRGBO(2, 173, 103, 1.0),
+                    ),
+                  ),
+                ),
+              ),
+
+              SizedBox(height: 40),
               // Save Button
               SizedBox(
                 width: double.infinity,
@@ -159,7 +228,11 @@ Future<void> _saveData() async {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, IconData icon, String hintText) {
+  Widget _buildTextField(
+    TextEditingController controller,
+    IconData icon,
+    String hintText,
+  ) {
     return TextField(
       controller: controller,
       decoration: InputDecoration(

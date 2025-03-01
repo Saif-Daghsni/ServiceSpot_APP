@@ -19,6 +19,10 @@ yekteb fi les informations mta3a fi el profile page
 
 step6:
 add service te5dem
+
+
+stp7:
+sign up location te5dem 
 */ 
 
 
@@ -28,6 +32,7 @@ add service te5dem
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:servicespot/pages/ForgetPassword_page.dart';
+import 'package:servicespot/pages/Maps.dart';
 import 'package:servicespot/pages/addService_page.dart';
 import 'package:servicespot/pages/auth.dart';
 import 'package:servicespot/pages/editeProfileWorker_page.dart';
@@ -69,9 +74,9 @@ class MyApp extends StatelessWidget {
         '/editeProfileWorker': (context) => EditeprofileworkerPage(),
         '/forgetPasswordPage': (context) => ForgetpasswordPage(),
         '/profilePage': (context) => ProfilePage(),
+        '/mapsscreen': (context) => MapScreen(),
         
       },
     );
   }
 }
-
