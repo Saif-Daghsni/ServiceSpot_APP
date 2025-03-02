@@ -23,6 +23,10 @@ add service te5dem
 
 stp7:
 sign up location te5dem 
+
+step8: 
+upload photos done 
+
 */ 
 
 
@@ -37,6 +41,7 @@ import 'package:servicespot/pages/addService_page.dart';
 import 'package:servicespot/pages/auth.dart';
 import 'package:servicespot/pages/editeProfileWorker_page.dart';
 import 'package:servicespot/pages/editeProfile_page.dart';
+import 'package:servicespot/pages/editeWorkerProfile.dart';
 import 'package:servicespot/pages/home_page.dart';
 import 'package:servicespot/pages/login_page.dart';
 import 'package:servicespot/pages/profile_page.dart';
@@ -75,6 +80,7 @@ class MyApp extends StatelessWidget {
         '/forgetPasswordPage': (context) => ForgetpasswordPage(),
         '/profilePage': (context) => ProfilePage(),
         '/mapsscreen': (context) => MapScreen(),
+        '/editeWorkerProfile': (context) => EditWorkerProfile(),
         
       },
     );

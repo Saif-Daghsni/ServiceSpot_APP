@@ -1,12 +1,9 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'dart:io';
-
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 
 class AddservicePage extends StatefulWidget {
   const AddservicePage({super.key});
@@ -16,8 +13,8 @@ class AddservicePage extends StatefulWidget {
 }
 
 class _AddservicePageState extends State<AddservicePage> {
-
-  String imageUrl='';
+  File? selectedImage;
+  String? imageBase64;
 
   TextEditingController serviceController = TextEditingController();
   TextEditingController priceController = TextEditingController();
@@ -32,22 +29,16 @@ class _AddservicePageState extends State<AddservicePage> {
     _fetchUserData();
   }
 
-  /// Function to fetch user data from Firestore
   Future<void> _fetchUserData() async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       try {
-        DocumentSnapshot userData =
-            await FirebaseFirestore.instance
-                .collection('users') // Make sure this is the correct collection
-                .doc(user.uid)
-                .get();
-
+        DocumentSnapshot userData = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
         if (userData.exists) {
           setState(() {
             userName.text = userData['username'] ?? 'No Username';
             phoneNumber.text = userData['phone'] ?? 'No Phone Number';
-            email.text = userData['email'] ?? 'No Email'; // Fixed typo
+            email.text = userData['email'] ?? 'No Email';
             location.text = userData['location'] ?? 'No Location';
           });
         }
@@ -57,37 +48,41 @@ class _AddservicePageState extends State<AddservicePage> {
     }
   }
 
-  /// Function to save data in Firestore
   Future<void> _saveData() async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       try {
-        await FirebaseFirestore.instance
-            .collection('workers')
-            .doc(user.uid)
-            .set({
-              'username': userName.text,
-              'phone': phoneNumber.text,
-              'email': email.text,
-              'service': serviceController.text,
-              'price': priceController.text,
-              'location': location.text,
-              'userId': user.uid,
-            });
+        await FirebaseFirestore.instance.collection('workers').doc(user.uid).set({
+          'username': userName.text,
+          'phone': phoneNumber.text,
+          'email': email.text,
+          'service': serviceController.text,
+          'price': priceController.text,
+          'location': location.text,
+          'imageBase64': imageBase64 ?? '',
+          'userId': user.uid,
+        });
 
-        // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Service saved successfully!")),
         );
-
-        // Navigate to favorite page
         Navigator.pushNamed(context, '/auth');
       } catch (e) {
-        // Show error message
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Failed to save service: $e")));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to save service: $e")));
       }
+    }
+  }
+
+  Future<void> _pickImage() async {
+    ImagePicker imagePicker = ImagePicker();
+    XFile? file = await imagePicker.pickImage(source: ImageSource.gallery);
+    if (file != null) {
+      File imageFile = File(file.path);
+      List<int> imageBytes = await imageFile.readAsBytes();
+      setState(() {
+        selectedImage = imageFile;
+        imageBase64 = base64Encode(imageBytes);
+      });
     }
   }
 
@@ -97,117 +92,29 @@ class _AddservicePageState extends State<AddservicePage> {
       backgroundColor: const Color.fromRGBO(235, 239, 238, 1.0),
       appBar: AppBar(
         backgroundColor: const Color.fromRGBO(2, 173, 103, 1.0),
-        title: const Align(
-          alignment: Alignment.center,
-          child: Text(
-            "Add Service",
-            style: TextStyle(
-              color: Color.fromRGBO(235, 239, 238, 1.0),
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
+        title: const Text("Add Service", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
-            icon: const Icon(
-              Icons.notifications,
-              color: Color.fromRGBO(235, 239, 238, 1.0),
-            ),
-            onPressed: () {
-              Navigator.pushNamed(context, '/loginPage');
-            },
+            icon: const Icon(Icons.notifications, color: Colors.white),
+            onPressed: () => Navigator.pushNamed(context, '/loginPage'),
           ),
         ],
       ),
-
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
+        padding: const EdgeInsets.all(30),
         child: SingleChildScrollView(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               _buildLabel("The service"),
-              _buildTextField(
-                serviceController,
-                Icons.handyman,
-                "Write your service",
-              ),
+              _buildTextField(serviceController, Icons.handyman, "Write your service"),
               _buildLabel("The price per hour"),
-              _buildTextField(
-                priceController,
-                Icons.attach_money,
-                "The price per hour",
-              ),
+              _buildTextField(priceController, Icons.attach_money, "The price per hour"),
               const SizedBox(height: 50),
-
-              // add photos
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed:()async {
-                    ImagePicker imagePicker=ImagePicker();
-                    XFile ? file = await imagePicker.pickImage(source:ImageSource.gallery);
-
-                    if(file==null)return;
-
-                    Reference referenceRoot = FirebaseStorage.instance.ref();
-                    Reference referenceDirImages = referenceRoot.child('images');
-
-                    Reference referenceImagetoUpload = referenceDirImages.child("workers photos");
-
-                    try {
-
-                    await referenceImagetoUpload.putFile(File(file!.path));
-
-                    imageUrl = await referenceImagetoUpload.getDownloadURL();
-                      
-                    } catch (e) {
-                      
-                    }
-                  }, 
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(
-                        50,
-                      ), // Correct way to set border radius
-                      side: const BorderSide(
-                        // Add border here instead of `decoration`
-                        color: Color.fromRGBO(2, 173, 103, 1.0),
-                        width: 2,
-                      ),
-                    ),
-                  ),
-                  child: const Text(
-                    "Add Photos",
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Color.fromRGBO(2, 173, 103, 1.0),
-                    ),
-                  ),
-                ),
-              ),
-
-              SizedBox(height: 40),
-              // Save Button
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: _saveData, // Call the save function
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromRGBO(2, 173, 103, 1.0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                  child: const Text(
-                    "Save",
-                    style: TextStyle(fontSize: 18, color: Colors.white),
-                  ),
-                ),
-              ),
+              selectedImage != null ? Image.file(selectedImage!, width: 100, height: 100, fit: BoxFit.cover) : const Text('No image selected'),
+              const SizedBox(height: 20),
+              _buildButton("Adddd Photos", _pickImage),
+              const SizedBox(height: 40),
+              _buildButton("Save", _saveData, isPrimary: true),
             ],
           ),
         ),
@@ -220,19 +127,12 @@ class _AddservicePageState extends State<AddservicePage> {
       alignment: Alignment.centerLeft,
       child: Padding(
         padding: const EdgeInsets.only(top: 10, bottom: 5),
-        child: Text(
-          text,
-          style: const TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
-        ),
+        child: Text(text, style: const TextStyle(fontSize: 23, fontWeight: FontWeight.bold)),
       ),
     );
   }
 
-  Widget _buildTextField(
-    TextEditingController controller,
-    IconData icon,
-    String hintText,
-  ) {
+  Widget _buildTextField(TextEditingController controller, IconData icon, String hintText) {
     return TextField(
       controller: controller,
       decoration: InputDecoration(
@@ -240,17 +140,26 @@ class _AddservicePageState extends State<AddservicePage> {
         hintText: hintText,
         filled: true,
         fillColor: Colors.white,
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(50),
-          borderSide: const BorderSide(color: Colors.transparent, width: 0),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(50),
-          borderSide: const BorderSide(
-            color: Color.fromRGBO(2, 173, 103, 1.0),
-            width: 2,
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(50), borderSide: BorderSide.none),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(50), borderSide: const BorderSide(color: Color.fromRGBO(2, 173, 103, 1.0), width: 2)),
+      ),
+    );
+  }
+
+  Widget _buildButton(String text, VoidCallback onPressed, {bool isPrimary = false}) {
+    return SizedBox(
+      width: double.infinity,
+      height: 50,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: isPrimary ? const Color.fromRGBO(2, 173, 103, 1.0) : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(50),
+            side: BorderSide(color: isPrimary ? Colors.transparent : const Color.fromRGBO(2, 173, 103, 1.0), width: 2),
           ),
         ),
+        child: Text(text, style: TextStyle(fontSize: 18, color: isPrimary ? Colors.white : const Color.fromRGBO(2, 173, 103, 1.0))),
       ),
     );
   }
