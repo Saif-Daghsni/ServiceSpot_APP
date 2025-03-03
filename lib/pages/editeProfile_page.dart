@@ -1,6 +1,13 @@
+// ignore_for_file: avoid_print
+
+import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
 
 class EditeprofilePage extends StatefulWidget {
   const EditeprofilePage({super.key});
@@ -10,6 +17,10 @@ class EditeprofilePage extends StatefulWidget {
 }
 
 class _EditeprofilePageState extends State<EditeprofilePage> {
+  File? selectedImage;
+  String? imageBase64;
+  Uint8List? imageBytes;
+
   TextEditingController userNameController = TextEditingController();
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
@@ -20,6 +31,19 @@ class _EditeprofilePageState extends State<EditeprofilePage> {
   void initState() {
     super.initState();
     _fetchUserData();
+  }
+
+  Future<void> _pickImage() async {
+    ImagePicker imagePicker = ImagePicker();
+    XFile? file = await imagePicker.pickImage(source: ImageSource.gallery);
+    if (file != null) {
+      File imageFile = File(file.path);
+      List<int> imageBytes = await imageFile.readAsBytes();
+      setState(() {
+        selectedImage = imageFile;
+        imageBase64 = base64Encode(imageBytes);
+      });
+    }
   }
 
   // Fetch the current user's data from Firestore
@@ -38,6 +62,19 @@ class _EditeprofilePageState extends State<EditeprofilePage> {
       phoneNumberController.text = userData['phone'] ?? '';
       locationController.text = userData['location'] ?? '';
       passwordController.text = userData['password'] ?? '';
+
+      String? imageBase64 = userData['imageBase64'];
+
+      if (imageBase64 != null && imageBase64.isNotEmpty) {
+        try {
+          Uint8List decodedImage = base64Decode(imageBase64);
+          setState(() {
+            imageBytes = decodedImage;
+          });
+        } catch (e) {
+          print("Error decoding image: $e");
+        }
+      }
     }
   }
 
@@ -53,6 +90,7 @@ class _EditeprofilePageState extends State<EditeprofilePage> {
             'email': emailController.text,
             'phone': phoneNumberController.text,
             'location': locationController.text,
+            'imageBase64': imageBase64 ?? '',
           });
       print("User data updated successfully!");
     }
@@ -119,6 +157,54 @@ class _EditeprofilePageState extends State<EditeprofilePage> {
                 ),
               ),
               SizedBox(height: 30),
+
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "Your profile photo",
+                  style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
+                ),
+              ),
+
+              SizedBox(height: 10),
+
+              imageBytes != null
+            ? ClipOval(
+                child: Image.memory(
+                  imageBytes!,
+                  width: 150,
+                  height: 150,
+                  fit: BoxFit.cover,
+                ),
+              )
+            : Icon(
+            Icons.person,
+            color: Colors.white,
+            size: 90,
+          ),
+
+              SizedBox(height: 20),
+
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: _pickImage,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color.fromRGBO(2, 173, 103, 1.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(50),
+                      side: BorderSide(color: Colors.transparent, width: 2),
+                    ),
+                  ),
+                  child: Text(
+                    "add photo",
+                    style: TextStyle(fontSize: 18, color: Colors.white),
+                  ),
+                ),
+              ),
+
+              SizedBox(height: 10),
               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
@@ -200,7 +286,7 @@ class _EditeprofilePageState extends State<EditeprofilePage> {
                 child: ElevatedButton(
                   onPressed: () {
                     _updateUserData();
-                    Navigator.pushNamed(context, '/profilePage');
+                    Navigator.pushNamed(context, '/auth');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color.fromRGBO(2, 173, 103, 1.0),

@@ -27,6 +27,8 @@ sign up location te5dem
 step8: 
 upload photos done 
 
+step9:
+profile photo
 */ 
 
 

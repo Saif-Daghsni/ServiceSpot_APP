@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -10,8 +13,18 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  
+  Uint8List? imageBytes;
+  
   TextEditingController userNameController = TextEditingController();
   TextEditingController phoneNumberController = TextEditingController();
+
+
+   @override
+  void initState() {
+    super.initState();
+    _fetchUserData(); // Call to fetch user data when the page is loaded
+  }
 
   Future<void> _fetchUserData() async {
     User? user = FirebaseAuth.instance.currentUser;
@@ -24,14 +37,24 @@ class _ProfilePageState extends State<ProfilePage> {
       // Set the data in the text controllers
       userNameController.text = userData['username'] ?? 'No Username';
       phoneNumberController.text = userData['phone'] ?? 'No Phone Number';
+
+      String? imageBase64 = userData['imageBase64'];
+
+      if (imageBase64 != null && imageBase64.isNotEmpty) {
+        try {
+          Uint8List decodedImage = base64Decode(imageBase64);
+          setState(() {
+            imageBytes = decodedImage;
+          });
+        } catch (e) {
+          print("Error decoding image: $e");
+        }
+      }
+      
     }
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _fetchUserData(); // Call to fetch user data when the page is loaded
-  }
+ 
 
   @override
   Widget build(BuildContext context) {
@@ -55,12 +78,23 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.person,
-                    color: Colors.white,
-                    size: 90,
-                  ),
-                  SizedBox(width: 10),
+                  imageBytes != null
+            ? ClipOval(
+                child: Image.memory(
+                  imageBytes!,
+                  width: 120,
+                  height: 120,
+                  fit: BoxFit.cover,
+                ),
+              )
+            : Icon(
+            Icons.person,
+            color: Colors.white,
+            size: 90,
+          ),
+
+
+                  SizedBox(width: 30),
                   SizedBox(
                     width: 140,
                     height: 90,
@@ -176,7 +210,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   SizedBox(height: 10),
                   GestureDetector(
                     onTap: () {
-                      Navigator.pushNamed(context, '/settingsPage');
+                      Navigator.pushNamed(context, '/editeWorkerProfile');
                     },
                     child: Container(
                       height: 55,

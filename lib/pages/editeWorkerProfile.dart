@@ -76,8 +76,8 @@ class _EditWorkerProfileState extends State<EditWorkerProfile> {
             ? ClipOval(
                 child: Image.memory(
                   imageBytes!,
-                  width: 150,
-                  height: 150,
+                  width: 200,
+                  height: 200,
                   fit: BoxFit.cover,
                 ),
               )
