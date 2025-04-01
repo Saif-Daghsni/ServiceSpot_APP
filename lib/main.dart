@@ -1,7 +1,7 @@
 /*
 step1:update the photo
 
-stp2 1. home page
+stp2 1. home page+
 */ 
 
 
