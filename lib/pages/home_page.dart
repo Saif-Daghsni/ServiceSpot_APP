@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class HomePage extends StatefulWidget {
@@ -8,6 +9,54 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  // Updated service categories as per your request
+  Map<String, List<Map<String, dynamic>>> servicesData = {
+    'Repair': [],
+    'Cleaner': [],
+    'Electrical': [],
+    'Plumber': [],
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchServicesData();
+  }
+
+  // Fetch data from Firebase Firestore
+  Future<void> _fetchServicesData() async {
+    try {
+      for (var category in servicesData.keys) {
+        QuerySnapshot snapshot = await FirebaseFirestore.instance
+            .collection(category) // Corrected collection names
+            .get();
+
+        // Debugging: Print fetched data
+        print("Fetched data for $category: ${snapshot.docs}");
+
+        List<Map<String, dynamic>> servicesList = snapshot.docs.map((doc) {
+          return {
+            'name': doc['username'] ?? "No Name",
+            'work': category,
+            'phone': doc['phone'] ?? "No Phone",
+            'location': doc['location'] ?? "No Location",
+            'email': doc['email'] ?? "No Email",
+          };
+        }).toList();
+
+        setState(() {
+          servicesData[category] = servicesList;
+        });
+
+        if (servicesList.isEmpty) {
+          print("No data found for $category.");
+        }
+      }
+    } catch (e) {
+      print("Error fetching services data: $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -15,109 +64,34 @@ class _HomePageState extends State<HomePage> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
-          // Allow scrolling if needed
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start, // Align text to left
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 10),
 
-              /// **Service Section**
               _ServiceTitle("The Services", ""),
               const SizedBox(height: 10),
 
-              /// **Services Grid**
               Row(
                 children: [
-                  Expanded(child: _buildServiceTile('Repairs', Icons.build)),
-                  Expanded(
-                    child: _buildServiceTile(
-                      'Cleaning',
-                      Icons.cleaning_services,
-                    ),
-                  ),
+                  Expanded(child: _buildServiceTile('Repair', Icons.build)),
+                  Expanded(child: _buildServiceTile('Cleaner', Icons.cleaning_services)),
                 ],
               ),
               Row(
                 children: [
-                  Expanded(
-                    child: _buildServiceTile(
-                      'Electrical',
-                      Icons.electrical_services,
-                    ),
-                  ),
-                  Expanded(
-                    child: _buildServiceTile('Plumbing', Icons.plumbing),
-                  ),
+                  Expanded(child: _buildServiceTile('Electrical', Icons.electrical_services)),
+                  Expanded(child: _buildServiceTile('Plumber', Icons.plumbing)),
                 ],
               ),
 
               const SizedBox(height: 20),
 
-              /// **Other Service Titles**
-              _ServiceTitle("The Repairs", "See All"),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal, // Scroll horizontally
-                child: Row(
-                  children: [
-                    _ServiceBox(),
-                    SizedBox(width: 10),
-                    _ServiceBox(),
-                    SizedBox(width: 10),
-                    _ServiceBox(),
-                    SizedBox(width: 10),
-                    _ServiceBox(),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 10),
-              _ServiceTitle("Cleaning", "See All"),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal, // Scroll horizontally
-                child: Row(
-                  children: [
-                    _ServiceBox(),
-                    SizedBox(width: 10),
-                    _ServiceBox(),
-                    SizedBox(width: 10),
-                    _ServiceBox(),
-                    SizedBox(width: 10),
-                    _ServiceBox(),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 10),
-              _ServiceTitle("The Electrical", "See All"),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal, // Scroll horizontally
-                child: Row(
-                  children: [
-                    _ServiceBox(),
-                    SizedBox(width: 10),
-                    _ServiceBox(),
-                    SizedBox(width: 10),
-                    _ServiceBox(),
-                    SizedBox(width: 10),
-                    _ServiceBox(),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 10),
-              _ServiceTitle("The Plumbing", "See All"),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal, // Scroll horizontally
-                child: Row(
-                  children: [
-                    _ServiceBox(),
-                    SizedBox(width: 10),
-                    _ServiceBox(),
-                    SizedBox(width: 10),
-                    _ServiceBox(),
-                    SizedBox(width: 10),
-                    _ServiceBox(),
-                  ],
-                ),
-              ),
+              // Build Service Categories
+              _buildServiceCategory("Repair", servicesData['Repair']),
+              _buildServiceCategory("Cleaner", servicesData['Cleaner']),
+              _buildServiceCategory("Electrical", servicesData['Electrical']),
+              _buildServiceCategory("Plumber", servicesData['Plumber']),
             ],
           ),
         ),
@@ -125,7 +99,36 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _ServiceBox() {
+  // Widget to build service categories
+  Widget _buildServiceCategory(String category, List<Map<String, dynamic>>? services) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _ServiceTitle("The $category", "See All"),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: services!.isNotEmpty
+                ? services.map((service) {
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 10),
+                      child: _ServiceBox(service),
+                    );
+                  }).toList()
+                : [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 10),
+                      child: _ServiceBox({'name': "No services", 'work': category}),
+                    )
+                  ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Service Box to display individual service details
+  Widget _ServiceBox(Map<String, dynamic> service) {
     return Container(
       width: 270,
       height: 170,
@@ -143,8 +146,8 @@ class _HomePageState extends State<HomePage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("The Name", style: const TextStyle(fontSize: 15)),
-              Text("The Work", style: const TextStyle(fontSize: 15)),
+              Text(service['name'], style: const TextStyle(fontSize: 15)),
+              Text(service['work'], style: const TextStyle(fontSize: 15)),
             ],
           ),
           const Spacer(),
@@ -168,7 +171,7 @@ class _HomePageState extends State<HomePage> {
               Expanded(
                 child: IconButton(
                   onPressed: () {},
-                  icon: Icon(Icons.favorite, color: Colors.red),
+                  icon: const Icon(Icons.favorite, color: Colors.red),
                 ),
               ),
             ],
@@ -178,10 +181,10 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  /// **Service Title Widget**
+  // Service Title Widget
   Widget _ServiceTitle(String title, String seeAll) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween, // Ensures spacing
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           title,
@@ -204,7 +207,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  /// **Service Tile Widget**
+  // Service Tile Widget
   Widget _buildServiceTile(String title, IconData icon) {
     return Card(
       elevation: 2,

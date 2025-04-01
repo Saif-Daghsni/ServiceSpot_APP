@@ -37,12 +37,12 @@ class _EditeprofilePageState extends State<EditeprofilePage> {
   Future<void> _pickImage() async {
     ImagePicker imagePicker = ImagePicker();
     XFile? file = await imagePicker.pickImage(source: ImageSource.gallery);
-    if (file != null) {
+    if (file != null) { 
       File imageFile = File(file.path);
-      List<int> imageBytes = await imageFile.readAsBytes();
+      List<int> imageBytesList = await imageFile.readAsBytes();
       setState(() {
         selectedImage = imageFile;
-        imageBase64 = base64Encode(imageBytes);
+        imageBase64 = base64Encode(imageBytesList);
       });
     }
   }
@@ -65,10 +65,7 @@ class _EditeprofilePageState extends State<EditeprofilePage> {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       DocumentSnapshot userData =
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(user.uid)
-              .get();
+          await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
 
       // Set the data in the text controllers
       userNameController.text = userData['username'] ?? '';
@@ -77,11 +74,11 @@ class _EditeprofilePageState extends State<EditeprofilePage> {
       location.text = userData['location'] ?? '';
       passwordController.text = userData['password'] ?? '';
 
-      String? imageBase64 = userData['imageBase64'];
+      String? storedImageBase64 = userData['imageBase64'];
 
-      if (imageBase64 != null && imageBase64.isNotEmpty) {
+      if (storedImageBase64 != null && storedImageBase64.isNotEmpty) {
         try {
-          Uint8List decodedImage = base64Decode(imageBase64);
+          Uint8List decodedImage = base64Decode(storedImageBase64);
           setState(() {
             imageBytes = decodedImage;
           });
@@ -96,16 +93,13 @@ class _EditeprofilePageState extends State<EditeprofilePage> {
   Future<void> _updateUserData() async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .update({
-            'username': userNameController.text,
-            'email': emailController.text,
-            'phone': phoneNumberController.text,
-            'location': location.text,
-            'imageBase64': imageBase64 ?? '',
-          });
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+        'username': userNameController.text,
+        'email': emailController.text,
+        'phone': phoneNumberController.text,
+        'location': location.text,
+        'imageBase64': imageBase64 ?? '',
+      });
       print("User data updated successfully!");
     }
   }
@@ -117,9 +111,9 @@ class _EditeprofilePageState extends State<EditeprofilePage> {
       appBar: AppBar(
         backgroundColor: Color.fromRGBO(2, 173, 103, 1.0),
         title: const Align(
-          alignment: Alignment.center, // Align app name to the left
+          alignment: Alignment.center,
           child: Text(
-            "Edit profile",
+            "Edit Profile",
             style: TextStyle(
               color: Color.fromRGBO(235, 239, 238, 1.0),
               fontWeight: FontWeight.bold,
@@ -131,7 +125,7 @@ class _EditeprofilePageState extends State<EditeprofilePage> {
             icon: const Icon(
               Icons.notifications,
               color: Color.fromRGBO(235, 239, 238, 1.0),
-            ), // Notification icon
+            ),
             onPressed: () {
               Navigator.pushNamed(context, '/loginPage');
             },
@@ -141,13 +135,9 @@ class _EditeprofilePageState extends State<EditeprofilePage> {
 
       body: Padding(
         padding: EdgeInsets.only(left: 40, right: 20, top: 30, bottom: 30),
-
         child: SingleChildScrollView(
           child: Column(
-            mainAxisAlignment:
-                MainAxisAlignment.center, // Center text vertically
-            crossAxisAlignment:
-                CrossAxisAlignment.center, // Center text horizontally
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               SizedBox(height: 10),
 
@@ -161,14 +151,20 @@ class _EditeprofilePageState extends State<EditeprofilePage> {
 
               SizedBox(height: 10),
 
-              selectedImage != null
-                        ? Image.file(
-                          selectedImage!,
-                          width: 100,
-                          height: 100,
-                          fit: BoxFit.cover,
-                        )
-                        : Icon(Icons.person, color: Colors.white, size: 90),
+              imageBytes != null
+            ? ClipOval(
+                child: Image.memory(
+                  imageBytes!,
+                  width: 120,
+                  height: 120,
+                  fit: BoxFit.cover,
+                ),
+              )
+            : Icon(
+            Icons.person,
+            color: Colors.white,
+            size: 90,
+          ),
 
               SizedBox(height: 20),
 
@@ -192,64 +188,25 @@ class _EditeprofilePageState extends State<EditeprofilePage> {
               ),
 
               SizedBox(height: 10),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "User Name",
-                  style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
-                ),
-              ),
-
-              SizedBox(height: 10),
+              _buildTextLabel("User Name"),
               _buildTextField(userNameController, Icons.person, "User Name"),
 
               SizedBox(height: 10),
-
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "Email",
-                  style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
-                ),
-              ),
-
+              _buildTextLabel("Email"),
+              _buildTextField(emailController, Icons.mail, "Email"),
 
               SizedBox(height: 10),
-
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "Phone Number",
-                  style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
-                ),
-              ),
+              _buildTextLabel("Phone Number"),
+              _buildTextField(phoneNumberController, Icons.phone, "Phone Number"),
 
               SizedBox(height: 10),
-              _buildTextField(
-                phoneNumberController,
-                Icons.phone,
-                "Phone Number",
-              ),
-              SizedBox(height: 10),
-
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "Location",
-                  style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
-                ),
-              ),
+              _buildTextLabel("Location"),
 
               SizedBox(height: 10),
-
               GestureDetector(
                 onTap: _navigateToMap,
                 child: AbsorbPointer(
-                  child: _buildTextField(
-                    location,
-                    Icons.location_on,
-                    "Tap to choose location",
-                  ),
+                  child: _buildTextField(location, Icons.location_on, "Tap to choose location"),
                 ),
               ),
 
@@ -283,31 +240,25 @@ class _EditeprofilePageState extends State<EditeprofilePage> {
   }
 }
 
-Widget _buildTextField(
-  TextEditingController controller,
-  IconData icon,
-  String hintText, {
-  bool obscureText = false,
-}) {
+Widget _buildTextLabel(String text) {
+  return Align(
+    alignment: Alignment.centerLeft,
+    child: Text(
+      text,
+      style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
+    ),
+  );
+}
+
+Widget _buildTextField(TextEditingController controller, IconData icon, String hintText) {
   return TextField(
     controller: controller,
-    obscureText: obscureText,
     decoration: InputDecoration(
       prefixIcon: Icon(icon),
       hintText: hintText,
       filled: true,
       fillColor: Colors.white,
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(50),
-        borderSide: BorderSide(color: Colors.transparent, width: 0),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(50),
-        borderSide: BorderSide(
-          color: Color.fromRGBO(2, 173, 103, 1.0),
-          width: 2,
-        ),
-      ),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(50)),
     ),
   );
 }

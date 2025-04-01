@@ -1,9 +1,10 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:convert';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AddservicePage extends StatefulWidget {
   const AddservicePage({super.key});
@@ -14,14 +15,17 @@ class AddservicePage extends StatefulWidget {
 
 class _AddservicePageState extends State<AddservicePage> {
   File? selectedImage;
-  String? imageBase64;
+  String? serviceImageBase64;
+  String? profileImageUrl;
 
-  TextEditingController serviceController = TextEditingController();
   TextEditingController priceController = TextEditingController();
   TextEditingController userName = TextEditingController();
   TextEditingController email = TextEditingController();
   TextEditingController location = TextEditingController();
   TextEditingController phoneNumber = TextEditingController();
+
+  String? selectedService;
+  final List<String> services = ['Plumber', 'Cleaner', 'Electrical', 'Repair'];
 
   @override
   void initState() {
@@ -33,7 +37,8 @@ class _AddservicePageState extends State<AddservicePage> {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       try {
-        DocumentSnapshot userData = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        DocumentSnapshot userData =
+            await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
         if (userData.exists) {
           setState(() {
             userName.text = userData['username'] ?? 'No Username';
@@ -50,26 +55,38 @@ class _AddservicePageState extends State<AddservicePage> {
 
   Future<void> _saveData() async {
     User? user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
+    if (user != null && selectedService != null) {
       try {
-        await FirebaseFirestore.instance.collection('workers').doc(user.uid).set({
+        CollectionReference serviceRef =
+            FirebaseFirestore.instance.collection(selectedService!);
+
+        String newServiceId = serviceRef.doc().id;
+
+        await serviceRef.doc(newServiceId).set({
           'username': userName.text,
           'phone': phoneNumber.text,
           'email': email.text,
-          'service': serviceController.text,
           'price': priceController.text,
           'location': location.text,
-          'imageBase64': imageBase64 ?? '',
+          'serviceImageBase64': serviceImageBase64 ?? '',
           'userId': user.uid,
+          'timestamp': FieldValue.serverTimestamp(),
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Service saved successfully!")),
         );
-        Navigator.pushNamed(context, '/auth');
+        Navigator.pushReplacementNamed(context, '/auth');  // You can change '/loginPage' to the actual route
+
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to save service: $e")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to save service: $e")),
+        );
       }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please select a service before saving.")),
+      );
     }
   }
 
@@ -81,7 +98,7 @@ class _AddservicePageState extends State<AddservicePage> {
       List<int> imageBytes = await imageFile.readAsBytes();
       setState(() {
         selectedImage = imageFile;
-        imageBase64 = base64Encode(imageBytes);
+        serviceImageBase64 = base64Encode(imageBytes);
       });
     }
   }
@@ -92,7 +109,10 @@ class _AddservicePageState extends State<AddservicePage> {
       backgroundColor: const Color.fromRGBO(235, 239, 238, 1.0),
       appBar: AppBar(
         backgroundColor: const Color.fromRGBO(2, 173, 103, 1.0),
-        title: const Text("Add Service", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text(
+          "Add Service",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications, color: Colors.white),
@@ -106,14 +126,18 @@ class _AddservicePageState extends State<AddservicePage> {
           child: Column(
             children: [
               _buildLabel("The service"),
-              _buildTextField(serviceController, Icons.handyman, "Write your service"),
+              _buildDropdownField(),
               _buildLabel("The price per hour"),
-              _buildTextField(priceController, Icons.attach_money, "The price per hour"),
-              const SizedBox(height: 50),
-              Text("Add a photo "),
-              selectedImage != null ? Image.file(selectedImage!, width: 100, height: 100, fit: BoxFit.cover) : const Text('No image selected'),
+              _buildTextField(priceController, Icons.attach_money,
+                  "The price per hour",
+                  isNumeric: true),
+              _buildLabel("Add a service photo"),
+              selectedImage != null
+                  ? Image.file(selectedImage!,
+                      width: 100, height: 100, fit: BoxFit.cover)
+                  : const Text('No image selected'),
               const SizedBox(height: 20),
-              _buildButton("Adddd Photos", _pickImage),
+              _buildButton("Add Photos", _pickImage),
               const SizedBox(height: 40),
               _buildButton("Save", _saveData, isPrimary: true),
             ],
@@ -128,40 +152,84 @@ class _AddservicePageState extends State<AddservicePage> {
       alignment: Alignment.centerLeft,
       child: Padding(
         padding: const EdgeInsets.only(top: 10, bottom: 5),
-        child: Text(text, style: const TextStyle(fontSize: 23, fontWeight: FontWeight.bold)),
+        child: Text(text,
+            style: const TextStyle(fontSize: 23, fontWeight: FontWeight.bold)),
       ),
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, IconData icon, String hintText) {
+  Widget _buildDropdownField() {
+    return DropdownButtonFormField<String>(
+      value: selectedService,
+      items: services.map((service) {
+        return DropdownMenuItem<String>(
+          value: service,
+          child: Text(service),
+        );
+      }).toList(),
+      onChanged: (newValue) {
+        setState(() {
+          selectedService = newValue;
+        });
+      },
+      decoration: InputDecoration(
+        prefixIcon: const Icon(Icons.handyman),
+        hintText: "Select your service",
+        filled: true,
+        fillColor: Colors.white,
+        enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(50), borderSide: BorderSide.none),
+        focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(50),
+            borderSide: const BorderSide(
+                color: Color.fromRGBO(2, 173, 103, 1.0), width: 2)),
+      ),
+    );
+  }
+
+  Widget _buildTextField(TextEditingController controller, IconData icon,
+      String hintText,
+      {bool isNumeric = false}) {
     return TextField(
       controller: controller,
+      keyboardType: isNumeric ? TextInputType.number : TextInputType.text,
+      inputFormatters:
+          isNumeric ? [FilteringTextInputFormatter.digitsOnly] : null,
       decoration: InputDecoration(
         prefixIcon: Icon(icon),
         hintText: hintText,
         filled: true,
         fillColor: Colors.white,
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(50), borderSide: BorderSide.none),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(50), borderSide: const BorderSide(color: Color.fromRGBO(2, 173, 103, 1.0), width: 2)),
+        enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(50), borderSide: BorderSide.none),
+        focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(50),
+            borderSide: const BorderSide(
+                color: Color.fromRGBO(2, 173, 103, 1.0), width: 2)),
       ),
     );
   }
 
-  Widget _buildButton(String text, VoidCallback onPressed, {bool isPrimary = false}) {
-    return SizedBox(
-      width: double.infinity,
-      height: 50,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: isPrimary ? const Color.fromRGBO(2, 173, 103, 1.0) : Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(50),
-            side: BorderSide(color: isPrimary ? Colors.transparent : const Color.fromRGBO(2, 173, 103, 1.0), width: 2),
-          ),
+Widget _buildButton(String text, VoidCallback onPressed, {bool isPrimary = false}) {
+  return SizedBox(
+    width: double.infinity,
+    height: 50,
+    child: ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: isPrimary ? const Color.fromRGBO(2, 173, 103, 1.0) : Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(50),
         ),
-        child: Text(text, style: TextStyle(fontSize: 18, color: isPrimary ? Colors.white : const Color.fromRGBO(2, 173, 103, 1.0))),
       ),
-    );
-  }
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 18,
+          color: isPrimary ? Colors.white : const Color.fromRGBO(2, 173, 103, 1.0),
+        ),
+      ),
+    ),
+  );
+}
 }
