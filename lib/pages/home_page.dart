@@ -36,11 +36,13 @@ class _HomePageState extends State<HomePage> {
 
         List<Map<String, dynamic>> servicesList = snapshot.docs.map((doc) {
           return {
+            'id': doc.id,
             'name': doc['username'] ?? "No Name",
             'work': category,
             'phone': doc['phone'] ?? "No Phone",
             'location': doc['location'] ?? "No Location",
             'email': doc['email'] ?? "No Email",
+            'isFavorite': doc['isFavorite'] ?? false,
           };
         }).toList();
 
@@ -57,6 +59,29 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _toggleFavorite(Map<String, dynamic> service) async {
+    String serviceId = service['id'];
+    String category = service['work'];
+    bool newFavoriteStatus = !(service['isFavorite'] ?? false);
+
+    try {
+      await FirebaseFirestore.instance
+          .collection(category)
+          .doc(serviceId)
+          .update({'isFavorite': newFavoriteStatus});
+
+      setState(() {
+        for (var i = 0; i < servicesData[category]!.length; i++) {
+          if (servicesData[category]![i]['id'] == serviceId) {
+            servicesData[category]![i]['isFavorite'] = newFavoriteStatus;
+            break;
+          }
+        }
+      });
+    } catch (e) {
+      print("Error updating isFavorite: $e");
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -129,6 +154,7 @@ class _HomePageState extends State<HomePage> {
 
   // Service Box to display individual service details
   Widget _ServiceBox(Map<String, dynamic> service) {
+    bool isFavorite = service['isFavorite'] ?? false;
     return Container(
       width: 270,
       height: 170,
@@ -168,10 +194,11 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
-              Expanded(
-                child: IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.favorite, color: Colors.red),
+              IconButton(
+                onPressed: () => _toggleFavorite(service),
+                icon: Icon(
+                  Icons.favorite,
+                  color: isFavorite ? Colors.red : Colors.grey,
                 ),
               ),
             ],

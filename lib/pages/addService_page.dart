@@ -17,6 +17,7 @@ class _AddservicePageState extends State<AddservicePage> {
   File? selectedImage;
   String? serviceImageBase64;
   String? profileImageUrl;
+  bool isFavorite =false ;
 
   TextEditingController priceController = TextEditingController();
   TextEditingController userName = TextEditingController();
@@ -69,6 +70,7 @@ class _AddservicePageState extends State<AddservicePage> {
           'price': priceController.text,
           'location': location.text,
           'serviceImageBase64': serviceImageBase64 ?? '',
+          'isFavorite':isFavorite ,
           'userId': user.uid,
           'timestamp': FieldValue.serverTimestamp(),
         });

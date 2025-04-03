@@ -1,7 +1,5 @@
 /*
-step1:update the photo
-
-stp2 1. home page+
+step1:search and favorite page
 */ 
 
 
