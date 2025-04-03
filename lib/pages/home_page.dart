@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:servicespot/pages/WorkerDetails.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -9,7 +10,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  // Updated service categories as per your request
   Map<String, List<Map<String, dynamic>>> servicesData = {
     'Repair': [],
     'Cleaner': [],
@@ -23,16 +23,14 @@ class _HomePageState extends State<HomePage> {
     _fetchServicesData();
   }
 
-  // Fetch data from Firebase Firestore
   Future<void> _fetchServicesData() async {
     try {
       for (var category in servicesData.keys) {
         QuerySnapshot snapshot = await FirebaseFirestore.instance
-            .collection(category) // Corrected collection names
+            .collection(category)
             .get();
 
-        // Debugging: Print fetched data
-        print("Fetched data for $category: ${snapshot.docs}");
+        print("Fetched ${snapshot.docs.length} documents for $category.");
 
         List<Map<String, dynamic>> servicesList = snapshot.docs.map((doc) {
           return {
@@ -82,6 +80,7 @@ class _HomePageState extends State<HomePage> {
       print("Error updating isFavorite: $e");
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -112,7 +111,6 @@ class _HomePageState extends State<HomePage> {
 
               const SizedBox(height: 20),
 
-              // Build Service Categories
               _buildServiceCategory("Repair", servicesData['Repair']),
               _buildServiceCategory("Cleaner", servicesData['Cleaner']),
               _buildServiceCategory("Electrical", servicesData['Electrical']),
@@ -124,8 +122,9 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Widget to build service categories
   Widget _buildServiceCategory(String category, List<Map<String, dynamic>>? services) {
+    print("Building category: $category with services: ${services?.length}");
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -133,8 +132,9 @@ class _HomePageState extends State<HomePage> {
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
-            children: services!.isNotEmpty
+            children: services != null && services.isNotEmpty
                 ? services.map((service) {
+                    print("Adding service to UI: $service");
                     return Padding(
                       padding: const EdgeInsets.only(right: 10),
                       child: _ServiceBox(service),
@@ -151,64 +151,77 @@ class _HomePageState extends State<HomePage> {
       ],
     );
   }
-
-  // Service Box to display individual service details
-  Widget _ServiceBox(Map<String, dynamic> service) {
-    bool isFavorite = service['isFavorite'] ?? false;
-    return Container(
-      width: 270,
-      height: 170,
+Widget _ServiceBox(Map<String, dynamic> service) {
+  bool isFavorite = service['isFavorite'] ?? false;
+  return GestureDetector(
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => WorkerDetailsPage(service: service),
+        ),
+      );
+    },
+    child: Container(
+      width: 200,
+      margin: EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)],
       ),
-      padding: const EdgeInsets.all(10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(service['name'], style: const TextStyle(fontSize: 15)),
-              Text(service['work'], style: const TextStyle(fontSize: 15)),
+              Expanded(
+                child: Text(
+                  service['name'] ?? "Unknown",
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Text(
+                service['work'] ?? "Unknown",
+                style: const TextStyle(fontSize: 15, color: Colors.blueGrey),
+              ),
             ],
           ),
-          const Spacer(),
+          SizedBox(height: 10),
+          Text("📍 ${service['location'] ?? 'No Location'}",
+              style: TextStyle(fontSize: 14, color: Colors.grey[700])),
+          Text("📞 ${service['phone'] ?? 'No Phone'}",
+              style: TextStyle(fontSize: 14, color: Colors.grey[700])),
+          Text("✉️ ${service['email'] ?? 'No Email'}",
+              style: TextStyle(fontSize: 14, color: Colors.grey[700])),
+          SizedBox(height: 10),
           Row(
             children: [
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {}, 
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromRGBO(2, 173, 103, 1.0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
+                    backgroundColor: Color.fromRGBO(2, 173, 103, 1.0),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                   ),
-                  child: const Text(
-                    "Call",
-                    style: TextStyle(fontSize: 16, color: Colors.white),
-                  ),
+                  child: const Text("Call", style: TextStyle(fontSize: 16, color: Colors.white)),
                 ),
               ),
               IconButton(
                 onPressed: () => _toggleFavorite(service),
-                icon: Icon(
-                  Icons.favorite,
-                  color: isFavorite ? Colors.red : Colors.grey,
-                ),
+                icon: Icon(Icons.favorite, color: isFavorite ? Colors.red : Colors.grey),
               ),
             ],
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
-  // Service Title Widget
   Widget _ServiceTitle(String title, String seeAll) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -234,7 +247,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Service Tile Widget
   Widget _buildServiceTile(String title, IconData icon) {
     return Card(
       elevation: 2,

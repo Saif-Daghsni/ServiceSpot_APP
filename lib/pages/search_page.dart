@@ -68,7 +68,7 @@ class _SearchPageState extends State<SearchPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color.fromRGBO(235, 239, 238, 1.0),
+      backgroundColor: Color.fromRGBO(234, 234, 234, 1.0),
       body: Column(
         children: [
           // Search bar & filter dropdown

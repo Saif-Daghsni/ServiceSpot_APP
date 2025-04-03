@@ -8,7 +8,9 @@ class MyBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea( // Wrap in SafeArea to avoid system UI overlap
+    return Container(
+      color: const Color.fromRGBO(234, 234, 234, 1.0), // Background color for SafeArea
+      child: SafeArea( // Wrap in SafeArea to avoid system UI overlap
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 8), // Add margin
         decoration: BoxDecoration(
@@ -50,6 +52,7 @@ class MyBottomNavBar extends StatelessWidget {
             ],
           ),
         ),
+      ),
       ),
     );
   }

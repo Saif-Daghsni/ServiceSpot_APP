@@ -68,11 +68,11 @@ class _FavoritePageState extends State<FavoritePage> {
     }
   }
 
-  Widget _serviceBox(Map<String, dynamic> service) {
+  Widget _ServiceBox(Map<String, dynamic> service) {
+    bool isFavorite = service['isFavorite'] ?? false;
     return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-      padding: const EdgeInsets.all(15),
+      margin: EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
@@ -84,25 +84,30 @@ class _FavoritePageState extends State<FavoritePage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(service['name'], style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              Text(service['work'], style: const TextStyle(fontSize: 14, color: Colors.grey)),
+              Text(service['name'], style: const TextStyle(fontSize: 15)),
+              Text(service['work'], style: const TextStyle(fontSize: 15)),
             ],
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
+          Text("📍 ${service['location']}", style: TextStyle(fontSize: 14, color: Colors.grey[700])),
+          Text("📞 ${service['phone']}", style: TextStyle(fontSize: 14, color: Colors.grey[700])),
+          Text("✉️ ${service['email']}", style: TextStyle(fontSize: 14, color: Colors.grey[700])),
+          SizedBox(height: 10),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              ElevatedButton(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromRGBO(2, 173, 103, 1.0),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color.fromRGBO(2, 173, 103, 1.0),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  ),
+                  child: const Text("Call", style: TextStyle(fontSize: 16, color: Colors.white)),
                 ),
-                child: const Text("Call", style: TextStyle(fontSize: 16, color: Colors.white)),
               ),
               IconButton(
                 onPressed: () => _toggleFavorite(service),
-                icon: Icon(Icons.favorite, color: service['isFavorite'] ? Colors.red : Colors.grey),
+                icon: Icon(Icons.favorite, color: isFavorite ? Colors.red : Colors.grey),
               ),
             ],
           ),
@@ -111,10 +116,11 @@ class _FavoritePageState extends State<FavoritePage> {
     );
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color.fromRGBO(235, 239, 238, 1.0),
+      backgroundColor: Color.fromRGBO(234, 234, 234, 1.0),
       body: favoriteServices.isEmpty
           ? Center(
               child: Column(
@@ -127,10 +133,10 @@ class _FavoritePageState extends State<FavoritePage> {
               ),
             )
           : ListView.builder(
-              padding: const EdgeInsets.only(top: 20),
+              padding: EdgeInsets.only(left: 20, right: 20, top: 20),
               itemCount: favoriteServices.length,
               itemBuilder: (context, index) {
-                return _serviceBox(favoriteServices[index]);
+                return _ServiceBox(favoriteServices[index]);
               },
             ),
     );

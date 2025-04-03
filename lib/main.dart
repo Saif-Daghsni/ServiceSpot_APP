@@ -1,5 +1,5 @@
 /*
-step1:search and favorite page
+step:search and favorite page + home page
 */ 
 
 
@@ -10,6 +10,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:servicespot/pages/ForgetPassword_page.dart';
 import 'package:servicespot/pages/Maps.dart';
+import 'package:servicespot/pages/WorkerDetails.dart';
 import 'package:servicespot/pages/addService_page.dart';
 import 'package:servicespot/pages/auth.dart';
 import 'package:servicespot/pages/editeProfileWorker_page.dart';
@@ -54,6 +55,7 @@ class MyApp extends StatelessWidget {
         '/profilePage': (context) => ProfilePage(),
         '/mapsscreen': (context) => MapScreen(),
         '/editeWorkerProfile': (context) => EditWorkerProfile(),
+        '/workerDetails': (context) => WorkerDetailsPage(service: {},),
         
       },
     );
