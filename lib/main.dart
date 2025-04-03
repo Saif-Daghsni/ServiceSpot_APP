@@ -1,5 +1,5 @@
 /*
-step:search and favorite page + home page
+step:a phone call 
 */ 
 
 

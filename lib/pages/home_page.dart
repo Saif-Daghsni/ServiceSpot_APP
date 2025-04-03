@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:servicespot/pages/WorkerDetails.dart';
 
 class HomePage extends StatefulWidget {
@@ -81,6 +82,15 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void _makeCall(String phoneNumber) async {
+    final Uri phoneUri = Uri.parse('tel:$phoneNumber');
+    if (await canLaunchUrl(phoneUri)) {
+      await launchUrl(phoneUri);
+    } else {
+      print("Could not launch phone dialer.");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -92,10 +102,8 @@ class _HomePageState extends State<HomePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 10),
-
               _ServiceTitle("The Services", ""),
               const SizedBox(height: 10),
-
               Row(
                 children: [
                   Expanded(child: _buildServiceTile('Repair', Icons.build)),
@@ -108,9 +116,7 @@ class _HomePageState extends State<HomePage> {
                   Expanded(child: _buildServiceTile('Plumber', Icons.plumbing)),
                 ],
               ),
-
               const SizedBox(height: 20),
-
               _buildServiceCategory("Repair", servicesData['Repair']),
               _buildServiceCategory("Cleaner", servicesData['Cleaner']),
               _buildServiceCategory("Electrical", servicesData['Electrical']),
@@ -151,76 +157,79 @@ class _HomePageState extends State<HomePage> {
       ],
     );
   }
-Widget _ServiceBox(Map<String, dynamic> service) {
-  bool isFavorite = service['isFavorite'] ?? false;
-  return GestureDetector(
-    onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => WorkerDetailsPage(service: service),
+
+  Widget _ServiceBox(Map<String, dynamic> service) {
+    bool isFavorite = service['isFavorite'] ?? false;
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => WorkerDetailsPage(service: service),
+          ),
+        );
+      },
+      child: Container(
+        width: 200,
+        margin: EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)],
         ),
-      );
-    },
-    child: Container(
-      width: 200,
-      margin: EdgeInsets.symmetric(vertical: 8),
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  service['name'] ?? "Unknown",
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              Text(
-                service['work'] ?? "Unknown",
-                style: const TextStyle(fontSize: 15, color: Colors.blueGrey),
-              ),
-            ],
-          ),
-          SizedBox(height: 10),
-          Text("📍 ${service['location'] ?? 'No Location'}",
-              style: TextStyle(fontSize: 14, color: Colors.grey[700])),
-          Text("📞 ${service['phone'] ?? 'No Phone'}",
-              style: TextStyle(fontSize: 14, color: Colors.grey[700])),
-          Text("✉️ ${service['email'] ?? 'No Email'}",
-              style: TextStyle(fontSize: 14, color: Colors.grey[700])),
-          SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {}, 
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color.fromRGBO(2, 173, 103, 1.0),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    service['name'] ?? "Unknown",
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  child: const Text("Call", style: TextStyle(fontSize: 16, color: Colors.white)),
                 ),
-              ),
-              IconButton(
-                onPressed: () => _toggleFavorite(service),
-                icon: Icon(Icons.favorite, color: isFavorite ? Colors.red : Colors.grey),
-              ),
-            ],
-          ),
-        ],
+                Text(
+                  service['work'] ?? "Unknown",
+                  style: const TextStyle(fontSize: 15, color: Colors.blueGrey),
+                ),
+              ],
+            ),
+            SizedBox(height: 10),
+            Text("📍 ${service['location'] ?? 'No Location'}",
+                style: TextStyle(fontSize: 14, color: Colors.grey[700])),
+            Text("📞 ${service['phone'] ?? 'No Phone'}",
+                style: TextStyle(fontSize: 14, color: Colors.grey[700])),
+            Text("✉️ ${service['email'] ?? 'No Email'}",
+                style: TextStyle(fontSize: 14, color: Colors.grey[700])),
+            SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      _makeCall(service['phone'] ?? '');
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color.fromRGBO(2, 173, 103, 1.0),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    ),
+                    child: const Text("Call", style: TextStyle(fontSize: 16, color: Colors.white)),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => _toggleFavorite(service),
+                  icon: Icon(Icons.favorite, color: isFavorite ? Colors.red : Colors.grey),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _ServiceTitle(String title, String seeAll) {
     return Row(
