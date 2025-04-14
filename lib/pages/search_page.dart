@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:servicespot/pages/allWorkers.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -12,7 +13,13 @@ class _SearchPageState extends State<SearchPage> {
   String searchQuery = "";
   String selectedCategory = "All";
   List<Map<String, dynamic>> searchResults = [];
-  List<String> categories = ["All", "Plumber", "Cleaner", "Electrical", "Repair"];
+  List<String> categories = [
+    "All",
+    "Plumber",
+    "Cleaner",
+    "Electrical",
+    "Repair",
+  ];
 
   void _performSearch() async {
     setState(() {
@@ -24,13 +31,16 @@ class _SearchPageState extends State<SearchPage> {
       // Search across all categories
       List<Map<String, dynamic>> tempResults = [];
       for (String category in categories.sublist(1)) {
-        snapshot = await FirebaseFirestore.instance
-            .collection(category)
-            .where('username', isGreaterThanOrEqualTo: searchQuery)
-            .where('username', isLessThanOrEqualTo: searchQuery + '\uf8ff')
-            .get();
+        snapshot =
+            await FirebaseFirestore.instance
+                .collection(category)
+                .where('username', isGreaterThanOrEqualTo: searchQuery)
+                .where('username', isLessThanOrEqualTo: searchQuery + '\uf8ff')
+                .get();
 
-        tempResults.addAll(snapshot.docs.map((doc) => {
+        tempResults.addAll(
+          snapshot.docs.map(
+            (doc) => {
               'id': doc.id,
               'name': doc['username'],
               'work': category,
@@ -38,29 +48,37 @@ class _SearchPageState extends State<SearchPage> {
               'location': doc['location'],
               'email': doc['email'],
               'isFavorite': doc['isFavorite'] ?? false,
-            }));
+            },
+          ),
+        );
       }
       setState(() {
         searchResults = tempResults;
       });
     } else {
       // Search in the selected category
-      snapshot = await FirebaseFirestore.instance
-          .collection(selectedCategory)
-          .where('username', isGreaterThanOrEqualTo: searchQuery)
-          .where('username', isLessThanOrEqualTo: searchQuery + '\uf8ff')
-          .get();
+      snapshot =
+          await FirebaseFirestore.instance
+              .collection(selectedCategory)
+              .where('username', isGreaterThanOrEqualTo: searchQuery)
+              .where('username', isLessThanOrEqualTo: searchQuery + '\uf8ff')
+              .get();
 
       setState(() {
-        searchResults = snapshot.docs.map((doc) => {
-              'id': doc.id,
-              'name': doc['username'],
-              'work': selectedCategory,
-              'phone': doc['phone'],
-              'location': doc['location'],
-              'email': doc['email'],
-              'isFavorite': doc['isFavorite'] ?? false,
-            }).toList();
+        searchResults =
+            snapshot.docs
+                .map(
+                  (doc) => {
+                    'id': doc.id,
+                    'name': doc['username'],
+                    'work': selectedCategory,
+                    'phone': doc['phone'],
+                    'location': doc['location'],
+                    'email': doc['email'],
+                    'isFavorite': doc['isFavorite'] ?? false,
+                  },
+                )
+                .toList();
       });
     }
   }
@@ -103,41 +121,55 @@ class _SearchPageState extends State<SearchPage> {
                       searchResults.clear(); // Clear previous results
                     });
                   },
-                  items: categories.map((String category) {
-                    return DropdownMenuItem<String>(
-                      value: category,
-                      child: Text(category),
-                    );
-                  }).toList(),
+                  items:
+                      categories.map((String category) {
+                        return DropdownMenuItem<String>(
+                          value: category,
+                          child: Text(category),
+                        );
+                      }).toList(),
                 ),
                 SizedBox(width: 10),
                 ElevatedButton(
                   onPressed: _performSearch,
-                  child: Text("Search",style: TextStyle( color: Colors.blue)),
+                  child: Text("Search", style: TextStyle(color: Colors.blue)),
                 ),
               ],
             ),
           ),
 
+          // 👇 New button added here
+         
           // Search results
           Expanded(
-            child: searchResults.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Image.asset("assets/no-results.png", height: 120, width: 120),
-                        SizedBox(height: 10),
-                        Text("Try to do a search", style: TextStyle(fontSize: 16, color: Colors.black54)),
-                      ],
+            child:
+                searchResults.isEmpty
+                    ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Image.asset(
+                            "assets/no-results.png",
+                            height: 120,
+                            width: 120,
+                          ),
+                          SizedBox(height: 10),
+                          Text(
+                            "Try to do a search",
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.black54,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                    : ListView.builder(
+                      itemCount: searchResults.length,
+                      itemBuilder: (context, index) {
+                        return _ServiceBox(searchResults[index]);
+                      },
                     ),
-                  )
-                : ListView.builder(
-                    itemCount: searchResults.length,
-                    itemBuilder: (context, index) {
-                      return _ServiceBox(searchResults[index]);
-                    },
-                  ),
           ),
         ],
       ),
@@ -152,7 +184,9 @@ class _SearchPageState extends State<SearchPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)],
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -165,9 +199,18 @@ class _SearchPageState extends State<SearchPage> {
             ],
           ),
           SizedBox(height: 10),
-          Text("📍 ${service['location']}", style: TextStyle(fontSize: 14, color: Colors.grey[700])),
-          Text("📞 ${service['phone']}", style: TextStyle(fontSize: 14, color: Colors.grey[700])),
-          Text("✉️ ${service['email']}", style: TextStyle(fontSize: 14, color: Colors.grey[700])),
+          Text(
+            "📍 ${service['location']}",
+            style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+          ),
+          Text(
+            "📞 ${service['phone']}",
+            style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+          ),
+          Text(
+            "✉️ ${service['email']}",
+            style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+          ),
           SizedBox(height: 10),
           Row(
             children: [
@@ -176,14 +219,22 @@ class _SearchPageState extends State<SearchPage> {
                   onPressed: () {},
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color.fromRGBO(2, 173, 103, 1.0),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                   ),
-                  child: const Text("Call", style: TextStyle(fontSize: 16, color: Colors.white)),
+                  child: const Text(
+                    "Call",
+                    style: TextStyle(fontSize: 16, color: Colors.white),
+                  ),
                 ),
               ),
               IconButton(
                 onPressed: () => _toggleFavorite(service),
-                icon: Icon(Icons.favorite, color: isFavorite ? Colors.red : Colors.grey),
+                icon: Icon(
+                  Icons.favorite,
+                  color: isFavorite ? Colors.red : Colors.grey,
+                ),
               ),
             ],
           ),
@@ -196,7 +247,9 @@ class _SearchPageState extends State<SearchPage> {
     String serviceId = service['id'];
     String category = service['work'];
     bool newFavoriteStatus = !(service['isFavorite'] ?? false);
-    await FirebaseFirestore.instance.collection(category).doc(serviceId).update({'isFavorite': newFavoriteStatus});
+    await FirebaseFirestore.instance.collection(category).doc(serviceId).update(
+      {'isFavorite': newFavoriteStatus},
+    );
     setState(() {
       service['isFavorite'] = newFavoriteStatus;
     });

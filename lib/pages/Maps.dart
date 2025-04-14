@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -26,19 +28,16 @@ class _MapScreenState extends State<MapScreen> {
     _getCurrentLocation();
   }
 
-  // Method to get current location
   Future<void> _getCurrentLocation() async {
     bool serviceEnabled;
     LocationPermission permission;
 
-    // Check if location service is enabled
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       print("Location services are disabled.");
       return;
     }
 
-    // Check for location permission
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
@@ -53,7 +52,6 @@ class _MapScreenState extends State<MapScreen> {
       return;
     }
 
-    // Get the current position
     Position position = await Geolocator.getCurrentPosition();
     setState(() {
       _selectedLocation = LatLng(position.latitude, position.longitude);
@@ -61,14 +59,12 @@ class _MapScreenState extends State<MapScreen> {
       _isLoading = false;
     });
 
-    // Get address from LatLng
     await _getAddressFromLatLng(_selectedLocation!);
 
     final GoogleMapController controller = await _mapController.future;
     controller.animateCamera(CameraUpdate.newLatLng(_selectedLocation!));
   }
 
-  // Method to fetch address using Google Geocoding API
   Future<void> _getAddressFromLatLng(LatLng position) async {
     setState(() {
       _isFetchingAddress = true;
@@ -76,15 +72,13 @@ class _MapScreenState extends State<MapScreen> {
       _address1 = "${position.latitude},${position.longitude}";
     });
 
-    const String apiKey = "YOUR_GOOGLE_API_KEY"; // Replace with your actual API key
+    const String apiKey = "AIzaSyDgXjNXcDbH-lBqdT9FKfPGRYOFbY4ogbk";
     final String url =
         "https://maps.googleapis.com/maps/api/geocode/json?latlng=${position.latitude},${position.longitude}&key=$apiKey";
 
     try {
       final response = await http.get(Uri.parse(url));
       final data = json.decode(response.body);
-
-      print("Geocoding Response: $data"); // Debugging: Print API response
 
       if (response.statusCode == 200 && data["status"] == "OK") {
         setState(() {
@@ -106,13 +100,24 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-  // Next button callback
+  Future<void> _updateUserData() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null && _selectedLocation != null) {
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+        'latitude': _selectedLocation!.latitude,
+        'longitude': _selectedLocation!.longitude,
+        'address': _address,
+      });
+      print("User data updated successfully!");
+    }
+  }
+
   void _onNextPressed() async {
     if (_selectedLocation == null || _isFetchingAddress) return;
 
-    // Ensure we have the latest address before proceeding
     await _getAddressFromLatLng(_selectedLocation!);
-    
+    await _updateUserData();
+
     Navigator.pop(context, _address1);
   }
 
@@ -145,21 +150,9 @@ class _MapScreenState extends State<MapScreen> {
                       target: _selectedLocation ?? LatLng(0.0, 0.0),
                       zoom: 14,
                     ),
-                    markers: _selectedLocation == null
-                        ? {}
-                        : {
-                            Marker(
-                              markerId: const MarkerId('selected'),
-                              position: _selectedLocation!,
-                              draggable: true,
-                              onDragEnd: (newPosition) async {
-                                setState(() {
-                                  _selectedLocation = newPosition;
-                                });
-                                await _getAddressFromLatLng(newPosition);
-                              },
-                            ),
-                          },
+                    myLocationEnabled: true,
+                    myLocationButtonEnabled: true,
+                    markers: {}, // << No red marker
                     onTap: (LatLng location) async {
                       setState(() {
                         _selectedLocation = location;
@@ -171,13 +164,13 @@ class _MapScreenState extends State<MapScreen> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   color: Colors.white,
-
-
-                  
                   child: Text(
                     _address1,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
