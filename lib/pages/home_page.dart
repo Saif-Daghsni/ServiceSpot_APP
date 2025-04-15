@@ -140,7 +140,6 @@ class _HomePageState extends State<HomePage> {
           child: Row(
             children: services != null && services.isNotEmpty
                 ? services.map((service) {
-                    print("Adding service to UI: $service");
                     return Padding(
                       padding: const EdgeInsets.only(right: 10),
                       child: _ServiceBox(service),

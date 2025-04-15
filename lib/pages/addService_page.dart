@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:convert';
@@ -92,18 +93,32 @@ class _AddservicePageState extends State<AddservicePage> {
     }
   }
 
-  Future<void> _pickImage() async {
-    ImagePicker imagePicker = ImagePicker();
-    XFile? file = await imagePicker.pickImage(source: ImageSource.gallery);
-    if (file != null) {
-      File imageFile = File(file.path);
-      List<int> imageBytes = await imageFile.readAsBytes();
+Future<void> _pickImage() async {
+  ImagePicker imagePicker = ImagePicker();
+  XFile? file = await imagePicker.pickImage(source: ImageSource.gallery);
+
+  if (file != null) {
+    File imageFile = File(file.path);
+
+    // Compress the image
+    List<int>? compressedBytes = await FlutterImageCompress.compressWithFile(
+      imageFile.absolute.path,
+      minWidth: 300,
+      minHeight: 300,
+      quality: 50, // 0 - 100
+    );
+
+    if (compressedBytes != null) {
       setState(() {
         selectedImage = imageFile;
-        serviceImageBase64 = base64Encode(imageBytes);
+        serviceImageBase64 = base64Encode(compressedBytes);
       });
+    } else {
+      print("Image compression failed.");
     }
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
