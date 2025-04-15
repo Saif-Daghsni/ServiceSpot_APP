@@ -194,7 +194,7 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
                       ),
-                      // Error message for Email
+                      // Error message for Email "doesn't work"
                       if (errorMessageE.isNotEmpty)
                         Padding(
                           padding: EdgeInsets.only(left: 10, top: 5),

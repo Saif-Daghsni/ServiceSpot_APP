@@ -59,6 +59,9 @@ dependencies:
 
   url_launcher: ^6.0.10
 
+  flutter_image_compress: ^2.1.0
+
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

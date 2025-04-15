@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:servicespot/pages/Maps.dart';
+import 'package:servicespot/pages/auth.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -54,21 +56,28 @@ class _SignupPageState extends State<SignupPage> {
 
       // Ensure Firestore is initialized before using it
       await FirebaseFirestore.instance
-          .collection('users') // Collection name
-          .doc(userCredential.user!.uid) // Use UID as document ID
-          .set({
-            'username': userName.text.trim(),
-            'email': email.text.trim(),
-            'phone': phoneNumber.text.trim(),
-            'location': location.text.trim(),
-            'imageBase64': imageBase64 ?? '',
-            'createdAt': FieldValue.serverTimestamp(), // Store timestamp
-          });
+    .collection('users')
+    .doc(userCredential.user!.uid)
+    .set({
+      'username': userName.text.trim(),
+      'email': email.text.trim(),
+      'phone': phoneNumber.text.trim(),
+      'location': location.text.trim(),
+      'imageBase64': imageBase64 ?? '',
+      'createdAt': FieldValue.serverTimestamp(),
+    }).then((_) {
+      print("✅ Firestore save succeeded");
+    }).catchError((error) {
+      print("********************* Firestore save failed: $error");
+    });
+
 
       print("User registered and data saved to Firestore!");
 
-      // Navigate after successful signup
-      Navigator.pushNamed(context, '/auth');
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => Auth()),
+      );
     } catch (e) {
       print("Signup error: $e"); // Print the actual error
     }
@@ -85,18 +94,31 @@ class _SignupPageState extends State<SignupPage> {
     super.dispose();
   }
 
-  Future<void> _pickImage() async {
-    ImagePicker imagePicker = ImagePicker();
-    XFile? file = await imagePicker.pickImage(source: ImageSource.gallery);
-    if (file != null) {
-      File imageFile = File(file.path);
-      List<int> imageBytes = await imageFile.readAsBytes();
+Future<void> _pickImage() async {
+  ImagePicker imagePicker = ImagePicker();
+  XFile? file = await imagePicker.pickImage(source: ImageSource.gallery);
+
+  if (file != null) {
+    File imageFile = File(file.path);
+
+    // Compress the image
+    List<int>? compressedBytes = await FlutterImageCompress.compressWithFile(
+      imageFile.absolute.path,
+      minWidth: 300,
+      minHeight: 300,
+      quality: 50, // 0 - 100
+    );
+
+    if (compressedBytes != null) {
       setState(() {
         selectedImage = imageFile;
-        imageBase64 = base64Encode(imageBytes);
+        imageBase64 = base64Encode(compressedBytes);
       });
+    } else {
+      print("Image compression failed.");
     }
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -185,8 +207,7 @@ class _SignupPageState extends State<SignupPage> {
                       ),
                     ),
 
-
-                    _buildLabel("User name"),SizedBox(height: 5),
+                    _buildLabel("User name"), SizedBox(height: 5),
                     // User Name Input Field
                     _buildTextField(
                       controller: userName,
@@ -196,7 +217,7 @@ class _SignupPageState extends State<SignupPage> {
 
                     SizedBox(height: 10),
 
-                    _buildLabel("Email"),SizedBox(height: 5),
+                    _buildLabel("Email"), SizedBox(height: 5),
                     // Email Input Field
                     _buildTextField(
                       controller: email,
@@ -205,7 +226,7 @@ class _SignupPageState extends State<SignupPage> {
                     ),
 
                     SizedBox(height: 10),
-                    _buildLabel("Password"),SizedBox(height: 5),
+                    _buildLabel("Password"), SizedBox(height: 5),
                     // Password Input Field
                     _buildTextField(
                       controller: passWord,
@@ -215,7 +236,7 @@ class _SignupPageState extends State<SignupPage> {
                     ),
 
                     SizedBox(height: 10),
-                    _buildLabel("Confirm Password"),SizedBox(height: 5),
+                    _buildLabel("Confirm Password"), SizedBox(height: 5),
                     // Confirm Password Input Field
                     _buildTextField(
                       controller: confirmPassword,
@@ -225,7 +246,7 @@ class _SignupPageState extends State<SignupPage> {
                     ),
 
                     SizedBox(height: 10),
-                    _buildLabel("Phone Number"),SizedBox(height: 5),
+                    _buildLabel("Phone Number"), SizedBox(height: 5),
                     // Phone Number Input Field
                     _buildTextField(
                       controller: phoneNumber,
@@ -234,9 +255,15 @@ class _SignupPageState extends State<SignupPage> {
                     ),
 
                     SizedBox(height: 10),
-                    _buildLabel("Location"),SizedBox(height: 5),
+                    _buildLabel("Location"), SizedBox(height: 5),
                     // Location Input Field
-                    GestureDetector(
+                    _buildTextField(
+                      controller: location,
+                      icon: Icons.phone,
+                      hintText: "location",
+                    ),
+
+                    /*GestureDetector(
                       onTap: _navigateToMap,
                       child: AbsorbPointer(
                         child: _buildTextField(
@@ -245,8 +272,7 @@ class _SignupPageState extends State<SignupPage> {
                           hintText: "Tap to choose location",
                         ),
                       ),
-                    ),
-
+                    ),*/
                     SizedBox(height: 35),
 
                     // Sign Up Button
@@ -254,7 +280,10 @@ class _SignupPageState extends State<SignupPage> {
                       width: double.infinity,
                       height: 50,
                       child: ElevatedButton(
-                        onPressed: signup,
+                        onPressed: () {
+                          print("Sign up button pressed");
+                          signup();
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Color.fromRGBO(2, 173, 103, 1.0),
                           shape: RoundedRectangleBorder(
@@ -267,6 +296,8 @@ class _SignupPageState extends State<SignupPage> {
                         ),
                       ),
                     ),
+
+                    SizedBox(height: 35),
                   ],
                 ),
               ),

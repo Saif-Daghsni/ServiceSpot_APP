@@ -3,7 +3,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
-
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -34,18 +34,32 @@ class _EditeprofilePageState extends State<EditeprofilePage> {
     _fetchUserData();
   }
 
-  Future<void> _pickImage() async {
-    ImagePicker imagePicker = ImagePicker();
-    XFile? file = await imagePicker.pickImage(source: ImageSource.gallery);
-    if (file != null) { 
-      File imageFile = File(file.path);
-      List<int> imageBytesList = await imageFile.readAsBytes();
+Future<void> _pickImage() async {
+  ImagePicker imagePicker = ImagePicker();
+  XFile? file = await imagePicker.pickImage(source: ImageSource.gallery);
+
+  if (file != null) {
+    File imageFile = File(file.path);
+
+    // Compress the image
+    List<int>? compressedBytes = await FlutterImageCompress.compressWithFile(
+      imageFile.absolute.path,
+      minWidth: 300,
+      minHeight: 300,
+      quality: 50, // 0 - 100
+    );
+
+    if (compressedBytes != null) {
       setState(() {
         selectedImage = imageFile;
-        imageBase64 = base64Encode(imageBytesList);
+        imageBase64 = base64Encode(compressedBytes);
       });
+    } else {
+      print("Image compression failed.");
     }
   }
+}
+
 
   Future<void> _navigateToMap() async {
     final selectedLocation = await Navigator.push(
@@ -89,20 +103,43 @@ class _EditeprofilePageState extends State<EditeprofilePage> {
     }
   }
 
-  // Update the user data in Firestore
-  Future<void> _updateUserData() async {
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
+Future<void> _updateUserData() async {
+  User? user = FirebaseAuth.instance.currentUser;
+  if (user != null) {
+    try {
       await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
         'username': userNameController.text,
         'email': emailController.text,
         'phone': phoneNumberController.text,
         'location': location.text,
-        'imageBase64': imageBase64 ?? '',
+        'imageBase64': imageBase64 ?? '', 
       });
+
       print("User data updated successfully!");
+
+      // Navigate after successful update
+      Navigator.pushNamed(context, '/auth');
+    } catch (e) {
+      print("Error updating user data: $e");
+
+      // Show a dialog or snackbar so the user knows
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: Text("Error"),
+          content: Text("Something went wrong while saving. Details:\n$e"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("OK"),
+            ),
+          ],
+        ),
+      );
     }
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -151,20 +188,34 @@ class _EditeprofilePageState extends State<EditeprofilePage> {
 
               SizedBox(height: 10),
 
-              imageBytes != null
-            ? ClipOval(
-                child: Image.memory(
-                  imageBytes!,
-                  width: 120,
-                  height: 120,
-                  fit: BoxFit.cover,
-                ),
-              )
-            : Icon(
-            Icons.person,
-            color: Colors.white,
-            size: 90,
+             selectedImage != null
+    ? ClipOval(
+        child: Image.file(
+          selectedImage!,
+          width: 120,
+          height: 120,
+          fit: BoxFit.cover,
+        ),
+      )
+    : imageBytes != null
+        ? ClipOval(
+            child: Image.memory(
+              imageBytes!,
+              width: 120,
+              height: 120,
+              fit: BoxFit.cover,
+            ),
+          )
+        : CircleAvatar(
+            radius: 60,
+            backgroundColor: Colors.grey[300],
+            child: Icon(
+              Icons.person,
+              color: Colors.white,
+              size: 90,
+            ),
           ),
+
 
               SizedBox(height: 20),
 
@@ -216,10 +267,7 @@ class _EditeprofilePageState extends State<EditeprofilePage> {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: () {
-                    _updateUserData();
-                    Navigator.pushNamed(context, '/auth');
-                  },
+                  onPressed: _updateUserData,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color.fromRGBO(2, 173, 103, 1.0),
                     shape: RoundedRectangleBorder(
