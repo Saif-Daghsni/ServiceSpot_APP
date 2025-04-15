@@ -257,13 +257,7 @@ Future<void> _pickImage() async {
                     SizedBox(height: 10),
                     _buildLabel("Location"), SizedBox(height: 5),
                     // Location Input Field
-                    _buildTextField(
-                      controller: location,
-                      icon: Icons.phone,
-                      hintText: "location",
-                    ),
-
-                    /*GestureDetector(
+                    GestureDetector(
                       onTap: _navigateToMap,
                       child: AbsorbPointer(
                         child: _buildTextField(
@@ -272,7 +266,7 @@ Future<void> _pickImage() async {
                           hintText: "Tap to choose location",
                         ),
                       ),
-                    ),*/
+                    ),
                     SizedBox(height: 35),
 
                     // Sign Up Button
