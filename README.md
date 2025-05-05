@@ -1,16 +1,3 @@
 # servicespot
 
-A new Flutter project.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+This Flutter application, built using VS Code with Firebase as the backend, helps users easily find local service providers such as plumbers, electricians, repair specialists, and more. Users can view details including location, price, and direct contact options (call with one tap). The app also features search by name or category, a favorites list, editable user profiles, and the ability for users to add their own services.
