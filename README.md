@@ -24,6 +24,4 @@
 
 ## 🎥 Démo  
 
-▶️ [Regarder la vidéo de démonstration](https://drive.google.com/file/d/1g9U52CqzQe6NSSF0uYk3f8Q6oLXq4IAk/view?usp=drive_link)  
-
 ---
